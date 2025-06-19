@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607850843500",
+    "project_id": "aromex-4a032",
+    "storage_bucket": "aromex-4a032.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607850843500:android:f9b7fbf8203cbd4bc37749",
+        "android_client_info": {
+          "package_name": "com.example.pukhraj_mobiles"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGCco01ZW66YP4L9t_hGZjqP-Q1wmRSvI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

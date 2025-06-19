@@ -1,0 +1,12 @@
+{
+    "cmake.sourceDirectory": "D:/HumbleCoders/psychic-garbanzo/linux",
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": false,
+        "markdown": true,
+        "scminput": false,
+        "sql": true,
+        "cpp": true,
+        "javascript": true
+    }
+}
