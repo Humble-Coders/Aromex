@@ -1,6 +1,6 @@
 import 'package:aromex/pages/home/main.dart';
-import 'package:aromex/pages/home/widgets/action_section.dart';
-import 'package:aromex/pages/home/widgets/balance_section.dart';
+import 'package:aromex/pages/home/pages/widgets/action_section.dart';
+import 'package:aromex/pages/home/pages/widgets/balance_section.dart';
 import 'package:flutter/material.dart';
 
 class HomePageBase extends StatelessWidget {

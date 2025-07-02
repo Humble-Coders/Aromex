@@ -2,7 +2,7 @@ import 'package:aromex/models/balance_generic.dart';
 import 'package:aromex/models/middleman.dart';
 import 'package:aromex/models/sale.dart';
 import 'package:aromex/pages/home/pages/sale_detail_page.dart';
-import 'package:aromex/pages/home/widgets/balance_card.dart';
+import 'package:aromex/pages/home/pages/widgets/balance_card.dart';
 import 'package:aromex/widgets/generic_custom_table.dart';
 import 'package:aromex/widgets/profile_card.dart';
 import 'package:aromex/widgets/update_credit.dart';
@@ -23,13 +23,12 @@ class MiddlemanProfile extends StatefulWidget {
 class _MiddlemanProfileState extends State<MiddlemanProfile> {
   List<Sale> sales = [];
   bool isLoading = true;
-  late Middleman currentMiddleman; 
+  late Middleman currentMiddleman;
   SaleDetailPage? saleDetailPage;
   @override
   void initState() {
     super.initState();
-    currentMiddleman =
-        widget.middleman!; 
+    currentMiddleman = widget.middleman!;
     loadSales();
   }
 
@@ -87,11 +86,10 @@ class _MiddlemanProfileState extends State<MiddlemanProfile> {
   // Method to refresh middleman data from Firestore
   Future<void> refreshMiddlemanData() async {
     try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection(Middleman.collectionName)
-              .doc(currentMiddleman.id)
-              .get();
+      final doc = await FirebaseFirestore.instance
+          .collection(Middleman.collectionName)
+          .doc(currentMiddleman.id)
+          .get();
 
       if (doc.exists) {
         setState(() {
@@ -160,16 +158,14 @@ class _MiddlemanProfileState extends State<MiddlemanProfile> {
                                 padding: EdgeInsets.symmetric(
                                   horizontal:
                                       MediaQuery.of(context).size.width * 0.125,
-                                  vertical:
-                                      MediaQuery.of(context).size.height *
+                                  vertical: MediaQuery.of(context).size.height *
                                       0.125,
                                 ),
                                 child: UpdateCredit(
                                   title: "Update Credit",
-                                  amount:
-                                      currentMiddleman.balance == 0
-                                          ? currentMiddleman.balance
-                                          : -1 * currentMiddleman.balance,
+                                  amount: currentMiddleman.balance == 0
+                                      ? currentMiddleman.balance
+                                      : -1 * currentMiddleman.balance,
                                   updatedAt: updatedAt,
                                   icon: SvgPicture.asset(
                                     'assets/icons/credit_card.svg',
@@ -188,10 +184,9 @@ class _MiddlemanProfileState extends State<MiddlemanProfile> {
                           },
                         );
                       },
-                      amount:
-                          currentMiddleman.balance == 0
-                              ? currentMiddleman.balance
-                              : -1 * currentMiddleman.balance,
+                      amount: currentMiddleman.balance == 0
+                          ? currentMiddleman.balance
+                          : -1 * currentMiddleman.balance,
                       updatedAt: updatedAt,
                       isLoading: false,
                     ),
@@ -202,46 +197,46 @@ class _MiddlemanProfileState extends State<MiddlemanProfile> {
               const SizedBox(height: 16),
               sales.isNotEmpty
                   ? GenericCustomTable<Sale>(
-                    onTap: (p) {
-                      setState(() {
-                        saleDetailPage = SaleDetailPage(
-                          sale: p,
-                          onBack: () {
-                            setState(() {
-                              saleDetailPage = null;
-                            });
-                          },
-                        );
-                      });
-                    },
-                    entries: sales,
-                    headers: [
-                      "Date",
-                      "Order No.",
-                      "Amount",
-                      "Payment Source",
-                      "Credit",
-                    ],
-                    valueGetters: [
-                      (p) => DateFormat.yMd().format(p.date),
-                      (p) => p.orderNumber,
-                      (p) =>
-                          NumberFormat.currency(symbol: '\$').format(p.amount),
-                      (p) => balanceTypeTitles[p.paymentSource]!,
-                      (p) =>
-                          NumberFormat.currency(symbol: '\$').format(p.credit),
-                    ],
-                  )
+                      onTap: (p) {
+                        setState(() {
+                          saleDetailPage = SaleDetailPage(
+                            sale: p,
+                            onBack: () {
+                              setState(() {
+                                saleDetailPage = null;
+                              });
+                            },
+                          );
+                        });
+                      },
+                      entries: sales,
+                      headers: [
+                        "Date",
+                        "Order No.",
+                        "Amount",
+                        "Payment Source",
+                        "Credit",
+                      ],
+                      valueGetters: [
+                        (p) => DateFormat.yMd().format(p.date),
+                        (p) => p.orderNumber,
+                        (p) => NumberFormat.currency(symbol: '\$')
+                            .format(p.amount),
+                        (p) => balanceTypeTitles[p.paymentSource]!,
+                        (p) => NumberFormat.currency(symbol: '\$')
+                            .format(p.credit),
+                      ],
+                    )
                   : isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Center(
-                    child: Text(
-                      'No Sales Found',
-                      style: textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSecondary,
-                      ),
-                    ),
-                  ),
+                      ? const Center(child: CircularProgressIndicator())
+                      : Center(
+                          child: Text(
+                            'No Sales Found',
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSecondary,
+                            ),
+                          ),
+                        ),
             ],
           ),
         ),
