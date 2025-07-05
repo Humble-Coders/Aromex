@@ -194,8 +194,32 @@ class BalanceCalculatorService {
   }
 
   Future<String?> _getPersonType(String personName) async {
-    // Logic to determine person type
-    return 'Person';
+    // Check in each collection to find the person type
+    final collections = ['Customers', 'Suppliers', 'Middlemen', 'Person'];
+
+    for (String collection in collections) {
+      final querySnapshot =
+          await _firestore
+              .collection(collection)
+              .where('name', isEqualTo: personName)
+              .limit(1)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        switch (collection) {
+          case 'Customers':
+            return 'Customer';
+          case 'Suppliers':
+            return 'Supplier';
+          case 'Middlemen':
+            return 'Middleman';
+          default:
+            return 'Person';
+        }
+      }
+    }
+
+    return 'Person'; // Default if not found
   }
 
   String _getCollectionName(String? personType) {
