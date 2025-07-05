@@ -1,7 +1,9 @@
 import 'package:aromex/models/balance_generic.dart';
 import 'package:aromex/pages/home/pages/widgets/balance_card.dart';
+import 'package:aromex/pages/home/pages/widgets/market_price_card.dart';
 import 'package:aromex/pages/home/pages/widgets/update_balance_card.dart';
 import 'package:aromex/pages/home/pages/widgets/update_total_owe_due.dart';
+import 'package:aromex/services/market_price.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -34,6 +36,19 @@ class _BalanceSectionState extends State<BalanceSection> {
 
   bool isLoading = true;
   final FirebaseFirestore db = FirebaseFirestore.instance;
+  Future<double> getMarketPriceAmount() async {
+    try {
+      final prices = await MarketPriceService.getCurrentMarketPrices();
+      if (prices != null) {
+        // You can calculate a combined value or return one specific currency
+        // For example, return INR value or calculate an average
+        return prices['INR']?.toDouble() ?? 83.50;
+      }
+      return 83.50; // Default value
+    } catch (e) {
+      return 83.50; // Default value
+    }
+  }
 
   @override
   void initState() {
@@ -46,9 +61,10 @@ class _BalanceSectionState extends State<BalanceSection> {
         final updatedBalances = <BalanceType, Balance>{};
 
         for (final doc in snapshot.docs) {
-          final balanceType = balanceTypeTitles.entries
-              .firstWhere((e) => e.value == doc.id)
-              .key;
+          final balanceType =
+              balanceTypeTitles.entries
+                  .firstWhere((e) => e.value == doc.id)
+                  .key;
 
           final balance = Balance.fromFirestore(doc);
           updatedBalances[balanceType] = balance;
@@ -65,43 +81,42 @@ class _BalanceSectionState extends State<BalanceSection> {
           totalDue = balances[BalanceType.totalDue]?.amount ?? 0;
           expenseRecord = balances[BalanceType.expenseRecord]?.amount ?? 0;
 
-          cashUpdatedAt = balances[BalanceType.cash]?.lastTransaction != null
-              ? DateFormat.yMd().add_jm().format(
+          cashUpdatedAt =
+              balances[BalanceType.cash]?.lastTransaction != null
+                  ? DateFormat.yMd().add_jm().format(
                     balances[BalanceType.cash]!.lastTransaction.toDate(),
                   )
-              : '';
-          bankUpdatedAt = balances[BalanceType.bank]?.lastTransaction != null
-              ? DateFormat.yMd().add_jm().format(
+                  : '';
+          bankUpdatedAt =
+              balances[BalanceType.bank]?.lastTransaction != null
+                  ? DateFormat.yMd().add_jm().format(
                     balances[BalanceType.bank]!.lastTransaction.toDate(),
                   )
-              : '';
+                  : '';
           creditCardUpdatedAt =
               balances[BalanceType.creditCard]?.lastTransaction != null
                   ? DateFormat.yMd().add_jm().format(
-                        balances[BalanceType.creditCard]!
-                            .lastTransaction
-                            .toDate(),
-                      )
+                    balances[BalanceType.creditCard]!.lastTransaction.toDate(),
+                  )
                   : '';
-          totalOweUpdatedAt = balances[BalanceType.totalOwe]?.lastTransaction !=
-                  null
-              ? DateFormat.yMd().add_jm().format(
+          totalOweUpdatedAt =
+              balances[BalanceType.totalOwe]?.lastTransaction != null
+                  ? DateFormat.yMd().add_jm().format(
                     balances[BalanceType.totalOwe]!.lastTransaction.toDate(),
                   )
-              : '';
-          totalDueUpdatedAt = balances[BalanceType.totalDue]?.lastTransaction !=
-                  null
-              ? DateFormat.yMd().add_jm().format(
+                  : '';
+          totalDueUpdatedAt =
+              balances[BalanceType.totalDue]?.lastTransaction != null
+                  ? DateFormat.yMd().add_jm().format(
                     balances[BalanceType.totalDue]!.lastTransaction.toDate(),
                   )
-              : '';
+                  : '';
           expenseUpdatedAt =
               balances[BalanceType.expenseRecord]?.lastTransaction != null
                   ? DateFormat.yMd().add_jm().format(
-                        balances[BalanceType.expenseRecord]!
-                            .lastTransaction
-                            .toDate(),
-                      )
+                    balances[BalanceType.expenseRecord]!.lastTransaction
+                        .toDate(),
+                  )
                   : '';
         });
       });
@@ -344,7 +359,16 @@ class _BalanceSectionState extends State<BalanceSection> {
                 },
               ),
             ),
-            const Expanded(child: SizedBox()),
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: MarketPriceWidget(
+                balances: balances,
+                isLoading: isLoading,
+                expenseRecord: expenseRecord,
+                expenseUpdatedAt: expenseUpdatedAt,
+              ),
+            ),
           ],
         ),
       ],

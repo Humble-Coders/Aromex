@@ -1,4 +1,5 @@
-import 'package:aromex/pages/Journal/main.dart';
+import 'package:aromex/pages/currency_exchange/currency_entry_page.dart'
+    hide SizedBox, Container;
 import 'package:aromex/pages/customer/main.dart';
 import 'package:aromex/pages/home/main.dart';
 import 'package:aromex/pages/inventory/main.dart';
@@ -29,7 +30,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
     Page("Customer Profile", Icons.people, const CustomerPage()),
     Page("Middleman Profile", Icons.person_2, const MiddlemanPage()),
     Page("Inventory", Icons.inventory_2, const InventoryPage()),
-    Page("Journal Report", Icons.inventory_2, const JournalReportPage()),
+    Page("Add Entry", Icons.inventory_2, const CurrencyEntryPage()),
     Page("Statistics", Icons.analytics, const StatisticsNavigationPage()),
   ];
 
@@ -68,18 +69,20 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     return Container(
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                        color: _selectedIndex == idx
-                            ? Colors.white
-                            : Colors.transparent,
+                        color:
+                            _selectedIndex == idx
+                                ? Colors.white
+                                : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       width: double.infinity,
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () => setState(() {
-                            _selectedIndex = idx;
-                          }),
+                          onTap:
+                              () => setState(() {
+                                _selectedIndex = idx;
+                              }),
                           hoverColor: Colors.white12,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -87,9 +90,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
                               children: [
                                 Icon(
                                   _pages[idx].icon,
-                                  color: _selectedIndex == idx
-                                      ? colorScheme.primary
-                                      : colorScheme.onPrimary,
+                                  color:
+                                      _selectedIndex == idx
+                                          ? colorScheme.primary
+                                          : colorScheme.onPrimary,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -97,9 +101,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
                                   _pages[idx].title,
                                   maxLines: 1,
                                   style: textTheme.titleMedium?.copyWith(
-                                    color: _selectedIndex == idx
-                                        ? colorScheme.primary
-                                        : colorScheme.onPrimary,
+                                    color:
+                                        _selectedIndex == idx
+                                            ? colorScheme.primary
+                                            : colorScheme.onPrimary,
                                   ),
                                 ),
                               ],

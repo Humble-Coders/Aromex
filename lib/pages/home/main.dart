@@ -1,5 +1,4 @@
-import 'package:aromex/pages/Journal/main.dart';
-import 'package:aromex/pages/home/pages/add_journel.dart';
+import 'package:aromex/pages/currency_exchange/currency_entry_page.dart';
 import 'package:aromex/pages/home/pages/expense_record.dart';
 import 'package:aromex/pages/home/pages/home.dart';
 import 'package:aromex/pages/home/pages/purchase_record.dart';
@@ -12,7 +11,7 @@ enum Pages {
   purchaseRecord,
   expenseRecord,
   JournalEntryPage,
-  JournalReportPage
+  JournalReportPage,
 }
 
 class HomePage extends StatefulWidget {
@@ -44,8 +43,8 @@ class _HomePageState extends State<HomePage> {
       SaleRecord(onBack: () => changePage(Pages.home)),
       PurchaseRecord(onBack: () => changePage(Pages.home)),
       ExpenseRecord(onBack: () => changePage(Pages.home)),
-      JournalEntryPage(onBack: () => changePage(Pages.home)),
-      JournalReportPage(onBack: () => changePage(Pages.home)),
+      CurrencyEntryPage(onBack: () => changePage(Pages.home)),
+      //   JournalReportPage(onBack: () => changePage(Pages.home)),
     ]);
   }
 

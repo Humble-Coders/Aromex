@@ -231,7 +231,10 @@ class TotalOweDueCard extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        formatCurrency(oweAmount, showTrail: true),
+                                        formatCurrency(
+                                          oweAmount,
+                                          showTrail: true,
+                                        ),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         style: textTheme.headlineMedium
@@ -261,7 +264,10 @@ class TotalOweDueCard extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        formatCurrency(dueAmount, showTrail: true),
+                                        formatCurrency(
+                                          dueAmount,
+                                          showTrail: true,
+                                        ),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         style: textTheme.headlineMedium
