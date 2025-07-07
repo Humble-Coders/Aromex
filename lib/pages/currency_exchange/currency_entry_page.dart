@@ -117,13 +117,6 @@ class _CurrencyEntryPageState extends State<CurrencyEntryPage>
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text(
-          'Currency Exchange',
-          style: TextStyle(
-            color: colorScheme.onPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
         backgroundColor: colorScheme.primary,
         elevation: 0,
         leading:

@@ -165,9 +165,10 @@ class _CurrencyFormWidgetState extends State<CurrencyFormWidget> {
             selectedP2: selectedP2,
             selectedRateCurrency: selectedRateCurrency ?? 'USD',
             commissionController: commissionController,
-            onCommissionPersonSelected: (person) {
+            onCommissionPersonSelected: (person, commission) {
               setState(() {
                 selectedCommissionPerson = person;
+                commissionController.text = commission;
               });
             },
           ),
@@ -350,32 +351,52 @@ class _CurrencyFormWidgetState extends State<CurrencyFormWidget> {
           Icon(icon, color: Colors.grey.shade600, size: 20),
           const SizedBox(width: 8),
           Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                hint: Text(hint, style: const TextStyle(fontSize: 13)),
-                isExpanded: true,
-                isDense: true,
-                items:
-                    [
-                      {'name': 'Myself', 'type': 'You'},
-                      ...widget.allPeople,
-                    ].map((item) {
-                      return DropdownMenuItem<String>(
-                        value: item['name'],
-                        child: Text(
-                          item['name'] ?? '',
-                          style: const TextStyle(fontSize: 13),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                onChanged: onChanged,
+            child: GestureDetector(
+              onTap:
+                  () => _showSearchableDropdown(
+                    context: context,
+                    value: value,
+                    hint: hint,
+                    onChanged: onChanged,
+                  ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  value ?? hint,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: value != null ? Colors.black : Colors.grey.shade600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ),
+          Icon(Icons.arrow_drop_down, color: Colors.grey.shade600, size: 20),
         ],
       ),
+    );
+  }
+
+  void _showSearchableDropdown({
+    required BuildContext context,
+    required String? value,
+    required String hint,
+    required void Function(String?) onChanged,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return SearchableDropdownDialog(
+          value: value,
+          hint: hint,
+          items: [
+            {'name': 'Myself', 'type': 'You'},
+            ...widget.allPeople,
+          ],
+          onChanged: onChanged,
+        );
+      },
     );
   }
 
@@ -493,6 +514,21 @@ class _CurrencyFormWidgetState extends State<CurrencyFormWidget> {
   }
 
   Widget _buildExchangeRateSection() {
+    // Get available currencies for rate conversion (excluding amount currency)
+    final availableRateCurrencies =
+        CurrencyConstants.currencies
+            .where((currency) => currency != selectedAmountCurrency)
+            .toList();
+
+    // Ensure selectedRateCurrency is valid
+    if (selectedRateCurrency == selectedAmountCurrency ||
+        !availableRateCurrencies.contains(selectedRateCurrency)) {
+      selectedRateCurrency =
+          availableRateCurrencies.isNotEmpty
+              ? availableRateCurrencies.first
+              : 'USD';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -502,42 +538,27 @@ class _CurrencyFormWidgetState extends State<CurrencyFormWidget> {
       ),
       child: Row(
         children: [
+          // From Currency (same as amount currency, non-editable)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.blue.shade300),
+              border: Border.all(color: Colors.grey.shade300),
             ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: selectedAmountCurrency,
-                isDense: true,
-                items:
-                    CurrencyConstants.currencies.map((currency) {
-                      return DropdownMenuItem<String>(
-                        value: currency,
-                        child: Text(
-                          currency,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedAmountCurrency = value;
-                    _updateExchangeRate();
-                  });
-                },
+            child: Text(
+              selectedAmountCurrency ?? 'INR',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
               ),
             ),
           ),
           const SizedBox(width: 8),
           const Icon(Icons.compare_arrows, size: 16),
           const SizedBox(width: 8),
+          // Exchange Rate Input
           SizedBox(
             width: 70,
             child: TextField(
@@ -553,6 +574,7 @@ class _CurrencyFormWidgetState extends State<CurrencyFormWidget> {
             ),
           ),
           const SizedBox(width: 8),
+          // To Currency (editable)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
@@ -565,7 +587,7 @@ class _CurrencyFormWidgetState extends State<CurrencyFormWidget> {
                 value: selectedRateCurrency,
                 isDense: true,
                 items:
-                    CurrencyConstants.currencies.map((currency) {
+                    availableRateCurrencies.map((currency) {
                       return DropdownMenuItem<String>(
                         value: currency,
                         child: Text(
@@ -706,6 +728,156 @@ class _CurrencyFormWidgetState extends State<CurrencyFormWidget> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class SearchableDropdownDialog extends StatefulWidget {
+  final String? value;
+  final String hint;
+  final List<Map<String, String>> items;
+  final void Function(String?) onChanged;
+
+  const SearchableDropdownDialog({
+    Key? key,
+    required this.value,
+    required this.hint,
+    required this.items,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  State<SearchableDropdownDialog> createState() =>
+      _SearchableDropdownDialogState();
+}
+
+class _SearchableDropdownDialogState extends State<SearchableDropdownDialog> {
+  late TextEditingController _searchController;
+  late List<Map<String, String>> _filteredItems;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _filteredItems = widget.items;
+    _searchController.addListener(_filterItems);
+  }
+
+  void _filterItems() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredItems =
+          widget.items.where((item) {
+            final name = item['name']?.toLowerCase() ?? '';
+            final type = item['type']?.toLowerCase() ?? '';
+            return name.contains(query) || type.contains(query);
+          }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: 300,
+        constraints: const BoxConstraints(maxHeight: 400),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select ${widget.hint}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search people...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child:
+                  _filteredItems.isEmpty
+                      ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text(
+                            'No people found',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      )
+                      : ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: _filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredItems[index];
+                          final isSelected = item['name'] == widget.value;
+
+                          return ListTile(
+                            dense: true,
+                            title: Text(
+                              item['name'] ?? '',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight:
+                                    isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                              ),
+                            ),
+                            subtitle:
+                                item['type'] != null
+                                    ? Text(
+                                      item['type']!,
+                                      style: const TextStyle(fontSize: 12),
+                                    )
+                                    : null,
+                            leading: Icon(
+                              isSelected ? Icons.check_circle : Icons.person,
+                              color: isSelected ? Colors.blue : Colors.grey,
+                              size: 20,
+                            ),
+                            onTap: () {
+                              widget.onChanged(item['name']);
+                              Navigator.of(context).pop();
+                            },
+                          );
+                        },
+                      ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

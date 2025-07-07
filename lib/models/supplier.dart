@@ -1,6 +1,22 @@
 import 'package:aromex/models/generic_firebase_object.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Helper function to safely parse double values
+double _parseDouble(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is String) {
+    return double.tryParse(value) ?? 0.0;
+  }
+  if (value is Map) {
+    // If it's a Map, maybe it has a 'value' field or similar
+    // Adjust this based on your actual data structure
+    return _parseDouble(value['value']) ?? 0.0;
+  }
+  return 0.0;
+}
+
 class Supplier extends GenericFirebaseObject<Supplier> {
   final String name;
   final String phone;
@@ -40,7 +56,7 @@ class Supplier extends GenericFirebaseObject<Supplier> {
       email: data['email'] ?? '',
       address: data['address'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      balance: (data['balance'] ?? 0.0).toDouble(),
+      balance: _parseDouble(data['balance']), // Fixed line
       transactionHistory:
           (data['transactionHistory'] as List<dynamic>?)
               ?.cast<DocumentReference>(),

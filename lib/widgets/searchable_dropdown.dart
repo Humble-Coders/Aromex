@@ -21,6 +21,7 @@ class SearchableDropdown<T> extends StatefulWidget {
   final TextEditingController? controller;
   final bool isMandatory;
   final bool showVerifiedIfValid;
+  final Function(String)? onTextChanged; // Fixed the parameter type
 
   SearchableDropdown({
     super.key,
@@ -44,10 +45,11 @@ class SearchableDropdown<T> extends StatefulWidget {
     this.defaultConstructor,
     this.isMandatory = true,
     this.showVerifiedIfValid = true,
+    this.onTextChanged, // Now properly defined
   }) : assert(
          allowAddingNew == false || defaultConstructor != null,
          "You must provide a default constructor if allowAddingNew is true.",
-       ) {}
+       );
 
   @override
   State<SearchableDropdown<T>> createState() => _SearchableDropdownState<T>();
@@ -65,6 +67,11 @@ class _SearchableDropdownState<T> extends State<SearchableDropdown<T>> {
       setState(() {
         _currentInput = widget.controller!.text;
       });
+
+      // Call onTextChanged when text changes
+      if (widget.onTextChanged != null) {
+        widget.onTextChanged!(widget.controller!.text);
+      }
     });
   }
 

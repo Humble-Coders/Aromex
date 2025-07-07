@@ -7,37 +7,50 @@ class BalanceReportTabWidget extends StatelessWidget {
   final List<Map<String, dynamic>> allEntries;
   final List<Map<String, String>> allPeople;
   final BalanceCalculatorService balanceCalculator;
+  final Function(String)? onPersonTap; // Optional callback for person tap
 
   const BalanceReportTabWidget({
     super.key,
     required this.allEntries,
     required this.allPeople,
     required this.balanceCalculator,
+    this.onPersonTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Use the same balance calculation logic as in entries tab
-    final personBalances = balanceCalculator.calculateBalanceReport(allEntries);
+    // Use FutureBuilder to handle the asynchronous balance calculation
+    return FutureBuilder<Map<String, Map<String, double>>>(
+      future: balanceCalculator.calculateBalanceReport(allEntries),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        final personBalances = snapshot.data ?? {};
 
-    if (personBalances.isEmpty) {
-      return _buildEmptyState();
-    }
+        if (personBalances.isEmpty) {
+          return _buildEmptyState();
+        }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(colorScheme),
-          const SizedBox(height: 24),
-          _buildBalanceTable(colorScheme, personBalances),
-          const SizedBox(height: 20),
-          _buildExportButton(),
-        ],
-      ),
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(colorScheme),
+              const SizedBox(height: 24),
+              _buildBalanceTable(colorScheme, personBalances),
+              const SizedBox(height: 20),
+              _buildExportButton(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -101,7 +114,7 @@ class BalanceReportTabWidget extends StatelessWidget {
               ),
             ),
             Text(
-              'Net balance with Myself',
+              'Net balance with Myself • Tap on person to view details',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
@@ -209,138 +222,225 @@ class BalanceReportTabWidget extends StatelessWidget {
   }
 
   Widget _buildTableRow(String personName, Map<String, double> balances) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: Colors.grey.shade200)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: _getPersonColor(personName).withOpacity(0.2),
-                      shape: BoxShape.circle,
+    // Find the primary currency with non-zero balance
+    String? primaryCurrency;
+    double primaryBalance = 0;
+
+    // Priority order: check currencies in order of importance
+    final currencyOrder = ['USD', 'INR', 'AED'];
+
+    for (String currency in currencyOrder) {
+      final balance = balances[currency] ?? 0;
+      if (balance.abs() > 0.01) {
+        // Using 0.01 to handle floating point precision
+        primaryCurrency = currency;
+        primaryBalance = balance;
+        break; // Take the first non-zero balance
+      }
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _handlePersonTap(personName, balances),
+        borderRadius: BorderRadius.circular(0),
+        hoverColor: Colors.grey.shade50,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.grey.shade200),
                     ),
-                    child: Center(
-                      child: Text(
-                        personName.substring(0, 1).toUpperCase(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: _getPersonColor(personName),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: _getPersonColor(personName).withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            personName.substring(0, 1).toUpperCase(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: _getPersonColor(personName),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          personName,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    personName,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  size: 16,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ],
+                            ),
+                            Text(
+                              _getPersonType(personName),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          _getPersonType(personName),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          ...['INR', 'USD', 'AED'].map((currency) {
-            final balance = balances[currency] ?? 0;
-            final isPositive = balance > 0;
-            final isNegative = balance < 0;
-
-            return Expanded(
-              flex: 2,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color:
-                      isPositive
-                          ? Colors.green.withOpacity(0.05)
-                          : isNegative
-                          ? Colors.red.withOpacity(0.05)
-                          : Colors.transparent,
-                  border: Border(
-                    right: BorderSide(color: Colors.grey.shade200),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      NumberFormat('#,##0.00').format(balance.abs()),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            isPositive
-                                ? Colors.green.shade700
-                                : isNegative
-                                ? Colors.red.shade700
-                                : Colors.grey.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
+              ),
+              ...['INR', 'USD', 'AED'].map((currency) {
+                // Show balance only in the cell of the primary currency
+                if (primaryCurrency == currency &&
+                    primaryBalance.abs() > 0.01) {
+                  final isPositive = primaryBalance > 0;
+                  final isNegative = primaryBalance < 0;
+
+                  return Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color:
                             isPositive
-                                ? Colors.green.withOpacity(0.2)
+                                ? Colors.green.withOpacity(0.05)
                                 : isNegative
-                                ? Colors.red.withOpacity(0.2)
-                                : Colors.grey.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        isPositive
-                            ? 'To Receive'
-                            : isNegative
-                            ? 'To Pay'
-                            : 'Settled',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color:
-                              isPositive
-                                  ? Colors.green.shade800
-                                  : isNegative
-                                  ? Colors.red.shade800
-                                  : Colors.grey.shade800,
+                                ? Colors.red.withOpacity(0.05)
+                                : Colors.transparent,
+                        border: Border(
+                          right: BorderSide(color: Colors.grey.shade200),
                         ),
                       ),
+                      child: Column(
+                        children: [
+                          Text(
+                            NumberFormat(
+                              '#,##0.00',
+                            ).format(primaryBalance.abs()),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  isPositive
+                                      ? Colors.green.shade700
+                                      : isNegative
+                                      ? Colors.red.shade700
+                                      : Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  isPositive
+                                      ? Colors.green.withOpacity(0.2)
+                                      : isNegative
+                                      ? Colors.red.withOpacity(0.2)
+                                      : Colors.grey.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              isPositive
+                                  ? 'To Receive'
+                                  : isNegative
+                                  ? 'To Pay'
+                                  : 'Settled',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isPositive
+                                        ? Colors.green.shade800
+                                        : isNegative
+                                        ? Colors.red.shade800
+                                        : Colors.grey.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ],
+                  );
+                } else {
+                  // Show "Settled" with 0.00 for other currencies
+                  return Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: BorderSide(color: Colors.grey.shade200),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            '0.00',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Settled',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+              }).toList(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -349,6 +449,16 @@ class BalanceReportTabWidget extends StatelessWidget {
     ColorScheme colorScheme,
     Map<String, Map<String, double>> personBalances,
   ) {
+    // Calculate totals for each currency
+    Map<String, double> totals = {'INR': 0, 'USD': 0, 'AED': 0};
+
+    for (var personBalance in personBalances.values) {
+      for (var currency in totals.keys) {
+        totals[currency] =
+            (totals[currency] ?? 0) + (personBalance[currency] ?? 0);
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.primary.withOpacity(0.05),
@@ -374,10 +484,9 @@ class BalanceReportTabWidget extends StatelessWidget {
             ),
           ),
           ...['INR', 'USD', 'AED'].map((currency) {
-            double total = 0;
-            for (var balance in personBalances.values) {
-              total += balance[currency] ?? 0;
-            }
+            final total = totals[currency] ?? 0;
+            final hasBalance = total.abs() > 0.01;
+
             return Expanded(
               flex: 2,
               child: Container(
@@ -393,10 +502,10 @@ class BalanceReportTabWidget extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color:
-                        total > 0
-                            ? Colors.green.shade700
-                            : total < 0
-                            ? Colors.red.shade700
+                        hasBalance
+                            ? (total > 0
+                                ? Colors.green.shade700
+                                : Colors.red.shade700)
                             : Colors.grey.shade700,
                   ),
                   textAlign: TextAlign.center,
@@ -425,6 +534,40 @@ class BalanceReportTabWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Handle person tap - you can customize this based on your needs
+  void _handlePersonTap(String personName, Map<String, double> balances) {
+    // Option 1: Use provided callback
+    if (onPersonTap != null) {
+      onPersonTap!(personName);
+      return;
+    }
+
+    // Option 2: Show a bottom sheet with person details
+    _showPersonDetailsBottomSheet(personName, balances);
+  }
+
+  void _showPersonDetailsBottomSheet(
+    String personName,
+    Map<String, double> balances,
+  ) {
+    // This method would show a bottom sheet with person details
+    // You can implement this based on your app's design
+    print('Person tapped: $personName');
+    print('Balances: $balances');
+
+    // Example implementation:
+    /*
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => PersonDetailsBottomSheet(
+        personName: personName,
+        balances: balances,
+        allEntries: allEntries,
+      ),
+    );
+    */
   }
 
   Color _getPersonColor(String personName) {
