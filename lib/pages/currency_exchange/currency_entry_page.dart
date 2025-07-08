@@ -27,7 +27,7 @@ class _CurrencyEntryPageState extends State<CurrencyEntryPage>
     with TickerProviderStateMixin {
   final CurrencyService _currencyService = CurrencyService();
   final BalanceCalculatorService _balanceCalculator =
-      BalanceCalculatorService();
+  BalanceCalculatorService();
 
   // Tab controller
   TabController? _tabController;
@@ -120,12 +120,12 @@ class _CurrencyEntryPageState extends State<CurrencyEntryPage>
         backgroundColor: colorScheme.primary,
         elevation: 0,
         leading:
-            widget.onBack != null
-                ? IconButton(
-                  icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary),
-                  onPressed: widget.onBack,
-                )
-                : null,
+        widget.onBack != null
+            ? IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary),
+          onPressed: widget.onBack,
+        )
+            : null,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -237,6 +237,7 @@ class _CurrencyEntryPageState extends State<CurrencyEntryPage>
                   allEntries: allEntries,
                   allPeople: allPeople,
                   balanceCalculator: _balanceCalculator,
+                  onRefresh: _loadAllEntries,
                 ),
               ],
             ),

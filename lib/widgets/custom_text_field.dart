@@ -13,6 +13,7 @@ class CustomTextField extends StatelessWidget {
   final TextStyle? descriptionStyle;
   final bool isMandatory;
   final bool showVerifiedIfValid;
+  final FocusNode? focusNode; // Added focus node parameter
 
   const CustomTextField({
     super.key,
@@ -28,7 +29,9 @@ class CustomTextField extends StatelessWidget {
     this.descriptionStyle,
     this.isMandatory = true,
     this.showVerifiedIfValid = true,
+    this.focusNode, // Added focus node parameter
   });
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -73,6 +76,7 @@ class CustomTextField extends StatelessWidget {
           onTap: onTap,
           enabled: isEnabled,
           onChanged: onChanged,
+          focusNode: focusNode, // Added focus node to TextField
           decoration: InputDecoration(
             suffixIcon: suffixIcon,
             enabledBorder: OutlineInputBorder(
@@ -92,12 +96,12 @@ class CustomTextField extends StatelessWidget {
           error ?? description,
           maxLines: 2,
           style:
-              descriptionStyle ??
+          descriptionStyle ??
               textTheme.bodySmall?.copyWith(
                 color:
-                    error != null
-                        ? colorScheme.error
-                        : colorScheme.onSurfaceVariant,
+                error != null
+                    ? colorScheme.error
+                    : colorScheme.onSurfaceVariant,
               ),
         ),
       ],

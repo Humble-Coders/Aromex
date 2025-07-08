@@ -2,10 +2,14 @@
 cmake_minimum_required(VERSION 3.14)
 project(pukhraj_mobiles LANGUAGES CXX)
 
+# ✅ Enforce global C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "pukhraj_mobiles")
-
 
 # Add these lines before add_subdirectory(flutter)
 
@@ -56,11 +60,9 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
-
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
-
 
 # === Installation ===
 # Support files are copied into place next to the executable, so that it can
