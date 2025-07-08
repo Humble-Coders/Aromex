@@ -22,9 +22,7 @@ class GenericCustomTable<T> extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     // Add "Actions" header if rowActions is provided
-    final allHeaders = rowActions != null
-        ? [...headers, "Actions"]
-        : headers;
+    final allHeaders = rowActions != null ? [...headers, "Actions"] : headers;
 
     return Center(
       child: SizedBox(

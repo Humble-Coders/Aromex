@@ -6,10 +6,14 @@ project(pukhraj_mobiles LANGUAGES CXX)
 # the on-disk name of your application.
 set(BINARY_NAME "pukhraj_mobiles")
 
+
+# Add these lines before add_subdirectory(flutter)
+
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
-
+# Add this line to disable warnings as errors
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")
 # Define build configuration option.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)

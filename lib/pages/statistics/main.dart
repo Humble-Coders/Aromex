@@ -1,4 +1,4 @@
-import 'package:aromex/pages/home/widgets/action_card.dart';
+import 'package:aromex/pages/home/pages/widgets/action_card.dart';
 import 'package:aromex/pages/statistics/widgets/customer_credit_dashboard.dart';
 import 'package:aromex/pages/statistics/widgets/customer_products.dart';
 import 'package:aromex/pages/statistics/widgets/middleman_revenue.dart';
@@ -12,7 +12,8 @@ class StatisticsNavigationPage extends StatefulWidget {
   const StatisticsNavigationPage({super.key});
 
   @override
-  State<StatisticsNavigationPage> createState() => _StatisticsNavigationPageState();
+  State<StatisticsNavigationPage> createState() =>
+      _StatisticsNavigationPageState();
 }
 
 class _StatisticsNavigationPageState extends State<StatisticsNavigationPage> {
@@ -49,7 +50,7 @@ class _StatisticsNavigationPageState extends State<StatisticsNavigationPage> {
 
   Widget _buildNavigationPage(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: Padding(

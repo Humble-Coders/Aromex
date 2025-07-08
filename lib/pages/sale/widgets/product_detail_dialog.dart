@@ -147,6 +147,69 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
     refreshPhoneList();
   }
 
+  // NEW METHOD: Autofill based on IMEI
+  void autofillByIMEI(String imei) {
+    if (imei.trim().isEmpty) return;
+
+    // Find the phone with this IMEI
+    Phone? phoneWithIMEI = widget.allPhones.firstWhere(
+      (phone) => phone.imei == imei,
+      orElse: () => null as Phone,
+    );
+
+    if (phoneWithIMEI != null) {
+      setState(() {
+        // Clear any existing errors
+        imeiError = null;
+
+        // Autofill brand
+        selectedBrand = PhoneBrand.fromFirestore(phoneWithIMEI.brand!);
+        brandController.text = selectedBrand!.name;
+
+        // Autofill model
+        selectedModel = PhoneModel.fromFirestore(phoneWithIMEI.model!);
+        modelController.text = selectedModel!.name;
+
+        // Autofill carrier
+        selectedCarrier = phoneWithIMEI.carrier;
+        carrierController.text = phoneWithIMEI.carrier;
+
+        // Autofill storage location
+        selectedLocation = StorageLocation.fromFirestore(
+          phoneWithIMEI.storageLocation!,
+        );
+        locationController.text = selectedLocation!.name;
+
+        // Autofill capacity
+        selectedCapacity = phoneWithIMEI.capacity;
+        capacityController.text = "${phoneWithIMEI.capacity.toString()} GB";
+
+        // Autofill color
+        selectedColor = phoneWithIMEI.color;
+        colorController.text = phoneWithIMEI.color;
+
+        // Autofill status
+        selectedStatus = phoneWithIMEI.status;
+        statusController.text = phoneWithIMEI.status ? "Active" : "Inactive";
+
+        // Set the selected phone and cost price
+        selectedPhone = phoneWithIMEI;
+        _costPriceController.text = phoneWithIMEI.price.toString();
+
+        // Clear selling price for user input
+        _sellingPriceController.clear();
+      });
+
+      // Refresh the phone list to update available options
+      refreshPhoneList();
+    } else {
+      // IMEI not found, show error
+      setState(() {
+        imeiError = "IMEI not found in inventory";
+      });
+    }
+  }
+
   void refreshPhoneList() {
     // If errors, return
     if (hasErrors()) return;
@@ -305,18 +368,32 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                   flex: 1,
                   child: SearchableDropdown<String>(
                     title: "IMEI/Serial",
-                    description: "The IMEI of the phone",
+                    description:
+                        "The IMEI of the phone - Type to autofill other fields",
+                    error: imeiError,
                     items: imeis,
                     selectedItem: selectedIMEI,
+                    isMandatory: false, // Make IMEI non-mandatory
                     onChanged: (imei) {
                       selectedIMEI = imei;
-                      refreshPhoneList();
+                      if (imei != null) {
+                        autofillByIMEI(imei); // Call autofill method
+                      }
                     },
                     getLabel: (imei) => imei,
                     controller: imeiController,
                     onClear: () {
                       selectedIMEI = null;
+                      setState(() {
+                        imeiError = null;
+                      });
                       refreshPhoneList();
+                    },
+                    onTextChanged: (text) {
+                      // This will be called when user types in the field
+                      if (text.isNotEmpty) {
+                        autofillByIMEI(text);
+                      }
                     },
                   ),
                 ),
