@@ -41,8 +41,8 @@ dependencies:
   intl: ^0.20.2
   pdf: ^3.11.3
   file_selector: ^1.0.3
-  firebase_core: ^2.10.0  # Use older stable version
-  firebase_auth: ^4.6.0
+  firebase_core: ^2.24.2  # Use older stable version
+
   cloud_firestore: ^4.7.0
   firebase_storage: ^11.2.0
 

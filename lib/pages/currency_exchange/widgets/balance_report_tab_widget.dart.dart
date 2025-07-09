@@ -3,11 +3,12 @@ import 'package:intl/intl.dart';
 
 import '../../../services/balance_calculator_service.dart';
 
-class BalanceReportTabWidget extends StatelessWidget {
+class BalanceReportTabWidget extends StatefulWidget {
   final List<Map<String, dynamic>> allEntries;
   final List<Map<String, String>> allPeople;
   final BalanceCalculatorService balanceCalculator;
-  final Function(String)? onPersonTap; // Optional callback for person tap
+  final Function(String)? onPersonTap;
+  final VoidCallback? onRefresh; // Add refresh callback
 
   const BalanceReportTabWidget({
     super.key,
@@ -15,7 +16,43 @@ class BalanceReportTabWidget extends StatelessWidget {
     required this.allPeople,
     required this.balanceCalculator,
     this.onPersonTap,
+    this.onRefresh, // Add this parameter
   });
+
+  @override
+  State<BalanceReportTabWidget> createState() => _BalanceReportTabWidgetState();
+}
+
+class _BalanceReportTabWidgetState extends State<BalanceReportTabWidget> {
+  bool _isRefreshing = false;
+
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing) return;
+
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      // Clear the balance calculator cache to force fresh calculation
+      BalanceCalculatorService.clearCache();
+
+      // Call the parent's refresh callback if provided
+      if (widget.onRefresh != null) {
+        widget.onRefresh!();
+      }
+
+      // Add a small delay to show the refresh indicator
+      await Future.delayed(const Duration(milliseconds: 500));
+
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +60,13 @@ class BalanceReportTabWidget extends StatelessWidget {
 
     // Use FutureBuilder to handle the asynchronous balance calculation
     return FutureBuilder<Map<String, Map<String, double>>>(
-      future: balanceCalculator.calculateBalanceReport(allEntries),
+      future: widget.balanceCalculator.calculateBalanceReport(widget.allEntries),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting || _isRefreshing) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return _buildErrorState(snapshot.error.toString());
         }
         final personBalances = snapshot.data ?? {};
 
@@ -46,11 +83,65 @@ class BalanceReportTabWidget extends StatelessWidget {
               const SizedBox(height: 24),
               _buildBalanceTable(colorScheme, personBalances),
               const SizedBox(height: 20),
-              _buildExportButton(),
+              _buildActionButtons(),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.red.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 56,
+                color: Colors.red.shade400,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Error loading balance data',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.red.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error,
+              style: TextStyle(fontSize: 14, color: Colors.red.shade500),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _handleRefresh,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -102,31 +193,62 @@ class BalanceReportTabWidget extends StatelessWidget {
           child: Icon(Icons.assessment, color: colorScheme.primary, size: 24),
         ),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Balance Report',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Balance Report',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
               ),
+              Text(
+                'Net balance with Myself • Tap on person to view details',
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        ),
+        // Refresh button in header
+        Container(
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: colorScheme.primary.withOpacity(0.3),
             ),
-            Text(
-              'Net balance with Myself • Tap on person to view details',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+          child: IconButton(
+            onPressed: _isRefreshing ? null : _handleRefresh,
+            icon: _isRefreshing
+                ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colorScheme.primary,
+              ),
+            )
+                : Icon(
+              Icons.refresh,
+              color: colorScheme.primary,
+              size: 20,
             ),
-          ],
+            tooltip: 'Refresh balance data',
+            splashRadius: 20,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildBalanceTable(
-    ColorScheme colorScheme,
-    Map<String, Map<String, double>> personBalances,
-  ) {
+      ColorScheme colorScheme,
+      Map<String, Map<String, double>> personBalances,
+      ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -329,11 +451,11 @@ class BalanceReportTabWidget extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color:
-                            isPositive
-                                ? Colors.green.withOpacity(0.05)
-                                : isNegative
-                                ? Colors.red.withOpacity(0.05)
-                                : Colors.transparent,
+                        isPositive
+                            ? Colors.green.withOpacity(0.05)
+                            : isNegative
+                            ? Colors.red.withOpacity(0.05)
+                            : Colors.transparent,
                         border: Border(
                           right: BorderSide(color: Colors.grey.shade200),
                         ),
@@ -348,11 +470,11 @@ class BalanceReportTabWidget extends StatelessWidget {
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color:
-                                  isPositive
-                                      ? Colors.green.shade700
-                                      : isNegative
-                                      ? Colors.red.shade700
-                                      : Colors.grey.shade700,
+                              isPositive
+                                  ? Colors.green.shade700
+                                  : isNegative
+                                  ? Colors.red.shade700
+                                  : Colors.grey.shade700,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -363,11 +485,11 @@ class BalanceReportTabWidget extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color:
-                                  isPositive
-                                      ? Colors.green.withOpacity(0.2)
-                                      : isNegative
-                                      ? Colors.red.withOpacity(0.2)
-                                      : Colors.grey.withOpacity(0.2),
+                              isPositive
+                                  ? Colors.green.withOpacity(0.2)
+                                  : isNegative
+                                  ? Colors.red.withOpacity(0.2)
+                                  : Colors.grey.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -380,11 +502,11 @@ class BalanceReportTabWidget extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                                 color:
-                                    isPositive
-                                        ? Colors.green.shade800
-                                        : isNegative
-                                        ? Colors.red.shade800
-                                        : Colors.grey.shade800,
+                                isPositive
+                                    ? Colors.green.shade800
+                                    : isNegative
+                                    ? Colors.red.shade800
+                                    : Colors.grey.shade800,
                               ),
                             ),
                           ),
@@ -446,9 +568,9 @@ class BalanceReportTabWidget extends StatelessWidget {
   }
 
   Widget _buildSummaryRow(
-    ColorScheme colorScheme,
-    Map<String, Map<String, double>> personBalances,
-  ) {
+      ColorScheme colorScheme,
+      Map<String, Map<String, double>> personBalances,
+      ) {
     // Calculate totals for each currency
     Map<String, double> totals = {'INR': 0, 'USD': 0, 'AED': 0};
 
@@ -502,11 +624,11 @@ class BalanceReportTabWidget extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color:
-                        hasBalance
-                            ? (total > 0
-                                ? Colors.green.shade700
-                                : Colors.red.shade700)
-                            : Colors.grey.shade700,
+                    hasBalance
+                        ? (total > 0
+                        ? Colors.green.shade700
+                        : Colors.red.shade700)
+                        : Colors.grey.shade700,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -518,29 +640,57 @@ class BalanceReportTabWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildExportButton() {
-    return Center(
-      child: ElevatedButton.icon(
-        onPressed: () {
-          // TODO: Implement export functionality
-        },
-        icon: const Icon(Icons.download),
-        label: const Text('Export to Excel'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  Widget _buildActionButtons() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Refresh button (secondary)
+        ElevatedButton.icon(
+          onPressed: _isRefreshing ? null : _handleRefresh,
+          icon: _isRefreshing
+              ? SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: colorScheme.primary,
+            ),
+          )
+              : const Icon(Icons.refresh, size: 18),
+          label: Text(_isRefreshing ? 'Refreshing...' : 'Refresh Data'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: colorScheme.primary,
+            side: BorderSide(color: colorScheme.primary),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         ),
-      ),
+        // Export button
+        ElevatedButton.icon(
+          onPressed: () {
+            // TODO: Implement export functionality
+          },
+          icon: const Icon(Icons.download, size: 18),
+          label: const Text('Export to Excel'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+      ],
     );
   }
 
   // Handle person tap - you can customize this based on your needs
   void _handlePersonTap(String personName, Map<String, double> balances) {
     // Option 1: Use provided callback
-    if (onPersonTap != null) {
-      onPersonTap!(personName);
+    if (widget.onPersonTap != null) {
+      widget.onPersonTap!(personName);
       return;
     }
 
@@ -549,9 +699,9 @@ class BalanceReportTabWidget extends StatelessWidget {
   }
 
   void _showPersonDetailsBottomSheet(
-    String personName,
-    Map<String, double> balances,
-  ) {
+      String personName,
+      Map<String, double> balances,
+      ) {
     // This method would show a bottom sheet with person details
     // You can implement this based on your app's design
     print('Person tapped: $personName');
@@ -583,8 +733,8 @@ class BalanceReportTabWidget extends StatelessWidget {
   }
 
   String _getPersonType(String personName) {
-    final person = allPeople.firstWhere(
-      (p) => p['name'] == personName,
+    final person = widget.allPeople.firstWhere(
+          (p) => p['name'] == personName,
       orElse: () => {'type': 'Person'},
     );
     return person['type'] ?? 'Person';
