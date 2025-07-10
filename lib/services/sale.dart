@@ -17,6 +17,7 @@ Future<void> createSale(aromex_order.Order order, Sale sale) async {
   await addSaleToCustomer(order.scref!, saleRef);
   await updateSaleStats(sale.total, order.scref!);
   await addSaleToMiddleman(sale.middlemanRef, saleRef);
+  await addCreditToMiddleman(sale.middlemanRef, sale.mCredit);
 }
 
 Future<void> addBalance(
@@ -74,18 +75,39 @@ Future<void> addSaleToCustomer(
       });
 }
 
+// In createSale function, add this line:
+
+// Update addSaleToMiddleman function:
 Future<void> addSaleToMiddleman(
-  DocumentReference? middleman,
-  DocumentReference saleRef,
-) async {
+    DocumentReference? middleman,
+    DocumentReference saleRef,
+    ) async {
   if (middleman == null) return;
   await FirebaseFirestore.instance
       .collection('Middlemen')
       .doc(middleman.id)
       .update({
-        'transactionHistory': FieldValue.arrayUnion([saleRef]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+    'transactionHistory': FieldValue.arrayUnion([saleRef]),
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
+}
+
+// Add new function:
+Future<void> addCreditToMiddleman(
+    DocumentReference? middleman,
+    double credit,
+    ) async {
+  if (middleman == null) return;
+
+  final docRef = FirebaseFirestore.instance
+      .collection('Middlemen')
+      .doc(middleman.id);
+
+  final snapshot = await docRef.get();
+  final data = snapshot.data()!;
+  final currentBalance = (data['balance'] ?? 0.0) as num;
+
+  await docRef.update({'balance': currentBalance + credit});
 }
 
 Future<void> updateSaleStats(double amount, DocumentReference customer) async {
