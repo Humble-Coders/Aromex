@@ -93,6 +93,7 @@ class _AddMiddlemanState extends State<AddMiddleman> {
                             onChanged: (val) {
                               setState(() {});
                             },
+                            isMandatory: false,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -111,6 +112,7 @@ class _AddMiddlemanState extends State<AddMiddleman> {
                                 }
                               });
                             },
+                            isMandatory: false,
                           ),
                         ),
                       ],
@@ -414,8 +416,7 @@ class _AddMiddlemanState extends State<AddMiddleman> {
   bool validate() {
     return middlemanNameError == null &&
         middlemanPhoneError == null &&
-        middlemanNameController.text.isNotEmpty &&
-        middlemanPhoneController.text.isNotEmpty &&
-        middlemanEmailController.text.isNotEmpty;
+        middlemanEmailError == null &&
+        middlemanNameController.text.isNotEmpty;
   }
 }

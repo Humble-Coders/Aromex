@@ -89,7 +89,7 @@ class _AddSupplierState extends State<AddSupplier> {
                             error: supplierPhoneError,
                             onChanged: (val) {
                               setState(() {});
-                            },
+                            },isMandatory: false,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -99,15 +99,11 @@ class _AddSupplierState extends State<AddSupplier> {
                             textController: supplierEmailController,
                             description: "Enter supplier email",
                             error: supplierEmailError,
-                            onChanged: (val) {
+                            onChanged: (_) {
                               setState(() {
-                                if (validateEmail(val)) {
-                                  supplierEmailError = null;
-                                } else {
-                                  supplierEmailError = "Invalid email address";
-                                }
+
                               });
-                            },
+                            },isMandatory: false,
                           ),
                         ),
                       ],
@@ -408,8 +404,6 @@ class _AddSupplierState extends State<AddSupplier> {
 
   bool validate() {
     return supplierNameController.text.isNotEmpty &&
-        supplierNameError == null &&
-        supplierEmailError == null &&
-        supplierPhoneError == null;
+        supplierNameError == null;
   }
 }
