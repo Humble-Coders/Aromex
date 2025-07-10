@@ -8,6 +8,8 @@ import 'package:aromex/models/phone.dart';
 import 'package:aromex/models/phone_brand.dart';
 import 'package:aromex/models/phone_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:aromex/models/phone.dart';
+
 
 class Sale extends GenericFirebaseObject<Sale> {
   final String orderNumber;
@@ -116,39 +118,71 @@ Future<void> generateBill({
   double? adjustment,
   String? note,
 }) async {
+  print("Starting generateBill function");
+  print("Number of phones: ${phones.length}");
+
+  if (phones.isEmpty) {
+    throw Exception("No phones available for bill generation");
+  }
+
   List<BillItem> items = [];
-  Map<Phone, bool> processedPhones = {};
+  Map<String, List<Phone>> groupedPhones = {};
+
+  // Group phones by model, color, capacity, and price
   for (var phone in phones) {
-    if (processedPhones[phone] == true) continue;
+    String key = "${phone.modelRef?.id ?? 'unknown'}_${phone.color}_${phone.capacity}_${phone.price}";
+    if (!groupedPhones.containsKey(key)) {
+      groupedPhones[key] = [];
+    }
+    groupedPhones[key]!.add(phone);
+  }
 
-    // Find similar phones
-    List<Phone> similarPhones =
-        phones
-            .where(
-              (p) =>
-                  p.modelRef == phone.modelRef &&
-                  p.color == phone.color &&
-                  p.capacity == phone.capacity &&
-                  p.price == phone.price &&
-                  !processedPhones.containsKey(p),
-            )
-            .toList();
+  // Create bill items for each group
+  for (var entry in groupedPhones.entries) {
+    Phone phone = entry.value.first;
+    int quantity = entry.value.length;
 
-    PhoneModel phoneModel = PhoneModel.fromFirestore(phone.model!);
-    PhoneBrand phoneBrand = PhoneBrand.fromFirestore(phone.brand!);
+    String modelName = "Unknown Model";
+    String brandName = "Unknown Brand";
+
+    try {
+      // Fetch model name
+      if (phone.modelRef != null) {
+        DocumentSnapshot modelDoc = await phone.modelRef!.get();
+        if (modelDoc.exists) {
+          Map<String, dynamic> modelData = modelDoc.data() as Map<String, dynamic>;
+          modelName = modelData['name'] ?? "Unknown Model";
+        }
+      }
+
+      // Fetch brand name
+      if (phone.brandRef != null) {
+        DocumentSnapshot brandDoc = await phone.brandRef!.get();
+        if (brandDoc.exists) {
+          Map<String, dynamic> brandData = brandDoc.data() as Map<String, dynamic>;
+          brandName = brandData['name'] ?? "Unknown Brand";
+        }
+      }
+    } catch (e) {
+      print("Error loading phone details: $e");
+    }
+
+    String itemTitle = "$brandName $modelName, ${phone.color}, ${phone.capacity}GB";
+    print("Adding bill item: $itemTitle x $quantity @ ${phone.price}");
 
     items.add(
       BillItemImpl(
-        quantity: similarPhones.length,
-        title:
-            "${phoneBrand.name} ${phoneModel.name}, ${phone.color}, ${phone.capacity}GB",
+        quantity: quantity,
+        title: itemTitle,
         unitPrice: phone.price,
       ),
     );
+  }
 
-    for (var similarPhone in similarPhones) {
-      processedPhones[similarPhone] = true;
-    }
+  print("Total bill items created: ${items.length}");
+
+  if (items.isEmpty) {
+    throw Exception("No bill items could be generated");
   }
 
   // Create the bill
@@ -163,5 +197,13 @@ Future<void> generateBill({
     note: note,
     adjustment: adjustment,
   );
-  await generatePdfInvoice(bill);
+
+  try {
+    print("Generating PDF invoice with ${bill.items.length} items");
+    await generatePdfInvoice(bill);
+    print("PDF bill generated successfully");
+  } catch (e) {
+    print("Error generating PDF bill: $e");
+    throw e;
+  }
 }

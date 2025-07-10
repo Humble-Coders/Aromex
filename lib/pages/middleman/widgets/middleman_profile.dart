@@ -184,9 +184,7 @@ class _MiddlemanProfileState extends State<MiddlemanProfile> {
                           },
                         );
                       },
-                      amount: currentMiddleman.balance == 0
-                          ? currentMiddleman.balance
-                          : -1 * currentMiddleman.balance,
+                      amount: currentMiddleman.balance,
                       updatedAt: updatedAt,
                       isLoading: false,
                     ),

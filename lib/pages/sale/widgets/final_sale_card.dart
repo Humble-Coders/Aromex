@@ -9,6 +9,8 @@ import 'package:aromex/services/sale.dart';
 import 'package:aromex/widgets/searchable_dropdown.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:aromex/models/phone.dart';
+
 
 class FinalSaleCard extends StatefulWidget {
   final aromex_order.Order order;
@@ -54,6 +56,56 @@ class _FinalSaleCardState extends State<FinalSaleCard> {
       middlemen = [];
     }
     setState(() {});
+  }
+
+  Future<List<Phone>> fetchPhones() async {
+    List<Phone> phonesList = [];
+
+    print("DEBUG: Starting fetchPhones");
+    print("DEBUG: widget.order.phones is null? ${widget.order.phones == null}");
+    print("DEBUG: widget.order.phones length: ${widget.order.phones?.length ?? 0}");
+
+    // Check if the order has phoneList property instead
+    print("DEBUG: Checking widget.order properties...");
+
+    try {
+      // First, let's check what data we have in the order
+      if (widget.order.phones != null && widget.order.phones!.isNotEmpty) {
+        print("DEBUG: Found ${widget.order.phones!.length} phone references");
+
+        for (DocumentReference phoneRef in widget.order.phones!) {
+          print("DEBUG: Fetching phone at path: ${phoneRef.path}");
+          DocumentSnapshot phoneDoc = await phoneRef.get();
+
+          if (phoneDoc.exists) {
+            print("DEBUG: Phone document exists with data: ${phoneDoc.data()}");
+            phonesList.add(Phone.fromFirestore(phoneDoc));
+          } else {
+            print("DEBUG: Phone document does not exist at ${phoneRef.path}");
+          }
+        }
+      } else {
+        print("DEBUG: No phones found in widget.order.phones");
+
+        // Alternative: Check if phones are stored differently in the order
+        // Let's check if there's a phoneList property
+        try {
+          // If your Order model has a phoneList property with actual Phone objects
+          if (widget.order.phoneList != null && widget.order.phoneList!.isNotEmpty) {
+            print("DEBUG: Found phoneList with ${widget.order.phoneList!.length} phones");
+            phonesList = widget.order.phoneList!;
+          }
+        } catch (e) {
+          print("DEBUG: phoneList property not found or error: $e");
+        }
+      }
+    } catch (e) {
+      print("ERROR in fetchPhones: $e");
+      print("Stack trace: ${StackTrace.current}");
+    }
+
+    print("DEBUG: fetchPhones returning ${phonesList.length} phones");
+    return phonesList;
   }
 
   // Calculate Credit
@@ -479,7 +531,7 @@ class _FinalSaleCardState extends State<FinalSaleCard> {
                             mPaid: selectedMiddleman != null ?
                             (double.tryParse(_middlemanPaidController.text) ?? 0.0) : 0.0,
                             mCredit: selectedMiddleman != null ?
-                            (double.tryParse(_middlemancreditController.text) ?? 0.0) : 0.0,
+                            -(double.tryParse(_middlemancreditController.text) ?? 0.0) : 0.0,
                           );
                               showDialog(
                                 context: context,
@@ -579,56 +631,90 @@ class _FinalSaleCardState extends State<FinalSaleCard> {
                                                 child: const Text('Cancel'),
                                               ),
                                               TextButton(
-                                                onPressed:
-                                                    adjustmentError == null
-                                                        ? () async {
-                                                          // Get customer
-                                                          Customer customer =
-                                                              Customer.fromFirestore(
-                                                                await FirebaseFirestore
-                                                                    .instance
-                                                                    .doc(
-                                                                      widget
-                                                                          .order
-                                                                          .scref!
-                                                                          .path,
-                                                                    )
-                                                                    .get(),
-                                                              );
-                                                          // Proceed to generate the bill
-                                                          generateBill(
-                                                            sale: sale,
-                                                            customer: customer,
-                                                            phones:
-                                                                widget
-                                                                    .order
-                                                                    .phoneList,
-                                                            note:
-                                                                noteController
-                                                                        .text
-                                                                        .trim()
-                                                                        .isNotEmpty
-                                                                    ? noteController
-                                                                        .text
-                                                                        .trim()
-                                                                    : null,
-                                                            adjustment:
-                                                                adjustmentController
-                                                                        .text
-                                                                        .trim()
-                                                                        .isNotEmpty
-                                                                    ? double.parse(
-                                                                      adjustmentController
-                                                                          .text
-                                                                          .trim(),
-                                                                    )
-                                                                    : null,
-                                                          );
-                                                          Navigator.of(
-                                                            context,
-                                                          ).pop();
-                                                        }
-                                                        : null,
+                                                onPressed: adjustmentError == null
+                                                    ? () async {
+                                                  // DEBUG: Check order data
+                                                  print("DEBUG: Order data check:");
+                                                  print("DEBUG: Order number: ${widget.order.orderNumber}");
+                                                  print("DEBUG: Order phones: ${widget.order.phones}");
+                                                  print("DEBUG: Order phones length: ${widget.order.phones?.length}");
+
+                                                  // Try to access phoneList if it exists
+                                                  try {
+                                                    print("DEBUG: Order phoneList: ${widget.order.phoneList}");
+                                                    print("DEBUG: Order phoneList length: ${widget.order.phoneList?.length}");
+                                                  } catch (e) {
+                                                    print("DEBUG: phoneList not accessible: $e");
+                                                  }
+
+                                                  // Show loading indicator
+                                                  showDialog(
+                                                    context: context,
+                                                    barrierDismissible: false,
+                                                    builder: (context) {
+                                                      return Center(
+                                                        child: CircularProgressIndicator(),
+                                                      );
+                                                    },
+                                                  );
+
+                                                  try {
+                                                    // Get customer
+                                                    Customer customer = Customer.fromFirestore(
+                                                      await FirebaseFirestore.instance
+                                                          .doc(widget.order.scref!.path)
+                                                          .get(),
+                                                    );
+
+                                                    // Fetch the actual Phone objects
+                                                    List<Phone> phonesList = await fetchPhones();
+
+                                                    print("DEBUG: After fetchPhones, got ${phonesList.length} phones");
+
+                                                    // Close loading dialog
+                                                    if (context.mounted) {
+                                                      Navigator.pop(context);
+                                                    }
+
+                                                    // Only proceed if we have phones
+                                                    if (phonesList.isEmpty) {
+                                                      if (context.mounted) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          SnackBar(content: Text("No phones found in the order. Cannot generate bill.")),
+                                                        );
+                                                        Navigator.of(context).pop();
+                                                      }
+                                                      return;
+                                                    }
+
+                                                    // Proceed to generate the bill
+                                                    generateBill(
+                                                      sale: sale,
+                                                      customer: customer,
+                                                      phones: phonesList,
+                                                      note: noteController.text.trim().isNotEmpty
+                                                          ? noteController.text.trim()
+                                                          : null,
+                                                      adjustment: adjustmentController.text.trim().isNotEmpty
+                                                          ? double.parse(adjustmentController.text.trim())
+                                                          : null,
+                                                    );
+
+                                                    // Close the generate bill dialog
+                                                    if (context.mounted) {
+                                                      Navigator.of(context).pop();
+                                                    }
+                                                  } catch (e) {
+                                                    // Close loading dialog if error
+                                                    if (context.mounted) {
+                                                      Navigator.pop(context);
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text("Error generating bill: $e")),
+                                                      );
+                                                    }
+                                                  }
+                                                }
+                                                    : null,
                                                 child: const Text('Generate'),
                                               ),
                                             ],
