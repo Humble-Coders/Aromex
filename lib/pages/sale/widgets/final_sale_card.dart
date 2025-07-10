@@ -459,45 +459,28 @@ class _FinalSaleCardState extends State<FinalSaleCard> {
                         (!validate())
                             ? null
                             : () async {
-                              final sale = Sale(
-                                orderNumber: widget.order.orderNumber!,
-                                phones: widget.order.phones!,
-                                originalPrice:
-                                    widget.order.originalPrice ?? 0.0,
-                                customerRef: widget.order.scref!,
-                                amount: widget.order.amount,
-                                customerName: widget.order.scName,
-                                gst: double.parse(_gstController.text),
-                                pst: double.parse(_pstController.text),
-                                paymentSource: paymentSource!,
-                                date: widget.order.date!,
-                                total:
-                                    double.tryParse(_totalController.text) ??
-                                    0.0,
-                                paid:
-                                    double.tryParse(_paidController.text) ??
-                                    0.0,
-                                credit:
-                                    double.tryParse(_creditController.text) ??
-                                    0.0,
-                                middlemanRef:
-                                    selectedMiddleman?.snapshot?.reference,
-                                mTotal:
-                                    double.tryParse(
-                                      _middlemanTotalController.text,
-                                    ) ??
-                                    0.0,
-                                mPaid:
-                                    double.tryParse(
-                                      _middlemanPaidController.text,
-                                    ) ??
-                                    0.0,
-                                mCredit:
-                                    double.tryParse(
-                                      _middlemancreditController.text,
-                                    ) ??
-                                    0.0,
-                              );
+                          final sale = Sale(
+                            orderNumber: widget.order.orderNumber!,
+                            phones: widget.order.phones!,
+                            originalPrice: widget.order.originalPrice ?? 0.0,
+                            customerRef: widget.order.scref!,
+                            amount: widget.order.amount,
+                            customerName: widget.order.scName,
+                            gst: double.parse(_gstController.text),
+                            pst: double.parse(_pstController.text),
+                            paymentSource: paymentSource!,
+                            date: widget.order.date!,
+                            total: double.tryParse(_totalController.text) ?? 0.0,
+                            paid: double.tryParse(_paidController.text) ?? 0.0,
+                            credit: double.tryParse(_creditController.text) ?? 0.0,
+                            middlemanRef: selectedMiddleman?.snapshot?.reference,
+                            mTotal: selectedMiddleman != null ?
+                            (double.tryParse(_middlemanTotalController.text) ?? 0.0) : 0.0,
+                            mPaid: selectedMiddleman != null ?
+                            (double.tryParse(_middlemanPaidController.text) ?? 0.0) : 0.0,
+                            mCredit: selectedMiddleman != null ?
+                            (double.tryParse(_middlemancreditController.text) ?? 0.0) : 0.0,
+                          );
                               showDialog(
                                 context: context,
                                 barrierDismissible: false,

@@ -382,52 +382,58 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Status",
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Switch(
-                            value: _isActive,
-                            onChanged: (value) {
-                              setState(() {
-                                _isActive = value;
-                              });
-                            },
-                            activeColor: Colors.green,
-                          ),
-                          Text(
-                            _isActive ? "Active" : "Inactive",
-                            style: TextStyle(
-                              color:
-                                  _isActive
-                                      ? Colors.green
-                                      : colorScheme.onPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Whether the phone is active and ready for sale",
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+        const SizedBox(height: 24),
+        Row(
+          children: [
+        Expanded(
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Status",
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<bool>(
+              value: _isActive,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: true,
+                  child: Text(
+                    'Active',
+                    style: TextStyle(color: Colors.green),
                   ),
                 ),
+                DropdownMenuItem(
+                  value: false,
+                  child: Text(
+                    'Inactive',
+                    style: TextStyle(color:Colors.redAccent),
+                  ),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _isActive = value!;
+                });
+              },
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Whether the phone is active or inactive",
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
                 const SizedBox(width: 16),
                 Flexible(
                   flex: 1,
