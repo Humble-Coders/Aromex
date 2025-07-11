@@ -147,6 +147,50 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
     refreshPhoneList();
   }
 
+  void prefillFromIMEI(String imei) {
+    final phoneWithIMEI = widget.allPhones.firstWhere(
+      (phone) => phone.imei == imei,
+      orElse: () => throw Exception('Phone with IMEI $imei not found'),
+    );
+
+    setState(() {
+      // Set brand
+      selectedBrand = PhoneBrand.fromFirestore(phoneWithIMEI.brand!);
+      brandController.text = selectedBrand!.name;
+
+      // Set model
+      selectedModel = PhoneModel.fromFirestore(phoneWithIMEI.model!);
+      modelController.text = selectedModel!.name;
+
+      // Set storage location
+      selectedLocation = StorageLocation.fromFirestore(phoneWithIMEI.storageLocation!);
+      locationController.text = selectedLocation!.name;
+
+      // Set carrier
+      selectedCarrier = phoneWithIMEI.carrier;
+      carrierController.text = phoneWithIMEI.carrier;
+
+      // Set capacity
+      selectedCapacity = phoneWithIMEI.capacity;
+      capacityController.text = phoneWithIMEI.capacity.toString();
+
+      // Set color
+      selectedColor = phoneWithIMEI.color;
+      colorController.text = phoneWithIMEI.color;
+
+      // Set status
+      selectedStatus = phoneWithIMEI.status;
+      statusController.text = phoneWithIMEI.status ? "Active" : "Inactive";
+
+      // Set IMEI
+      selectedIMEI = imei;
+      imeiController.text = imei;
+    });
+
+    // Refresh the phone list to update all dropdowns
+    refreshPhoneList();
+  }
+
   void refreshPhoneList() {
     // If errors, return
     if (hasErrors()) return;
@@ -310,7 +354,11 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                     selectedItem: selectedIMEI,
                     onChanged: (imei) {
                       selectedIMEI = imei;
-                      refreshPhoneList();
+                      if (imei != null) {
+                        prefillFromIMEI(imei);
+                      } else {
+                        refreshPhoneList();
+                      }
                     },
                     getLabel: (imei) => imei,
                     controller: imeiController,
