@@ -349,9 +349,12 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                   flex: 1,
                   child: SearchableDropdown<String>(
                     title: "IMEI/Serial",
-                    description: "The IMEI of the phone",
+                    description:
+                        "The IMEI of the phone - Type to autofill other fields",
+                    error: imeiError,
                     items: imeis,
                     selectedItem: selectedIMEI,
+                    isMandatory: false, // Make IMEI non-mandatory
                     onChanged: (imei) {
                       selectedIMEI = imei;
                       if (imei != null) {
@@ -364,6 +367,9 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                     controller: imeiController,
                     onClear: () {
                       selectedIMEI = null;
+                      setState(() {
+                        imeiError = null;
+                      });
                       refreshPhoneList();
                     },
                   ),

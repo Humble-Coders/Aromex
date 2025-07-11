@@ -1,7 +1,9 @@
 import 'package:aromex/models/balance_generic.dart';
+import 'package:aromex/pages/home/pages/widgets/balance_card.dart';
+import 'package:aromex/pages/home/pages/widgets/market_price_card.dart';
 import 'package:aromex/pages/home/pages/widgets/update_balance_card.dart';
 import 'package:aromex/pages/home/pages/widgets/update_total_owe_due.dart';
-import 'package:aromex/pages/home/widgets/balance_card.dart';
+import 'package:aromex/services/market_price.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -34,6 +36,19 @@ class _BalanceSectionState extends State<BalanceSection> {
 
   bool isLoading = true;
   final FirebaseFirestore db = FirebaseFirestore.instance;
+  Future<double> getMarketPriceAmount() async {
+    try {
+      final prices = await MarketPriceService.getCurrentMarketPrices();
+      if (prices != null) {
+        // You can calculate a combined value or return one specific currency
+        // For example, return INR value or calculate an average
+        return prices['INR']?.toDouble() ?? 83.50;
+      }
+      return 83.50; // Default value
+    } catch (e) {
+      return 83.50; // Default value
+    }
+  }
 
   @override
   void initState() {
@@ -126,7 +141,7 @@ class _BalanceSectionState extends State<BalanceSection> {
                   ),
                   title: 'Cash balance',
                   amount: cashBalance,
-                  updatedAt: cashUpdatedAt, 
+                  updatedAt: cashUpdatedAt,
                   onTap: () {
                     showDialog(
                       context: context,
@@ -204,7 +219,6 @@ class _BalanceSectionState extends State<BalanceSection> {
             ],
           ),
         ),
-
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: IntrinsicHeight(
@@ -220,8 +234,7 @@ class _BalanceSectionState extends State<BalanceSection> {
                     ),
                     title: 'Credit card balance',
                     amount: creditCardBalance,
-                    updatedAt:
-                        creditCardUpdatedAt, 
+                    updatedAt: creditCardUpdatedAt,
                     onTap: () {
                       showDialog(
                         context: context,
@@ -264,8 +277,7 @@ class _BalanceSectionState extends State<BalanceSection> {
                     ),
                     oweAmount: totalOwe,
                     dueAmount: totalDue,
-                    updatedAt:
-                        totalOweUpdatedAt,
+                    updatedAt: totalOweUpdatedAt,
                     onTap: () {
                       showDialog(
                         context: context,
@@ -303,7 +315,6 @@ class _BalanceSectionState extends State<BalanceSection> {
             ),
           ),
         ),
-
         Row(
           children: [
             Expanded(
@@ -348,7 +359,16 @@ class _BalanceSectionState extends State<BalanceSection> {
                 },
               ),
             ),
-            const Expanded(child: SizedBox()),
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: MarketPriceWidget(
+                balances: balances,
+                isLoading: isLoading,
+                expenseRecord: expenseRecord,
+                expenseUpdatedAt: expenseUpdatedAt,
+              ),
+            ),
           ],
         ),
       ],

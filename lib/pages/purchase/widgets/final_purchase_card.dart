@@ -312,9 +312,8 @@ class _FinalPurchaseCardState extends State<FinalPurchaseCard> {
                                 paid:
                                     double.tryParse(_paidController.text) ??
                                     0.0,
-                                credit:
-                                    double.tryParse(_creditController.text) ??
-                                    0.0,
+                                credit: -(double.tryParse(_creditController.text) ?? 0.0),
+
                               );
                               showDialog(
                                 context: context,

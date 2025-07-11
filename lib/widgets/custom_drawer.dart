@@ -1,3 +1,5 @@
+import 'package:aromex/pages/currency_exchange/currency_entry_page.dart'
+    hide SizedBox, Container;
 import 'package:aromex/pages/customer/main.dart';
 import 'package:aromex/pages/home/main.dart';
 import 'package:aromex/pages/inventory/main.dart';
@@ -28,6 +30,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
     Page("Customer Profile", Icons.people, const CustomerPage()),
     Page("Middleman Profile", Icons.person_2, const MiddlemanPage()),
     Page("Inventory", Icons.inventory_2, const InventoryPage()),
+    Page("Add Entry", Icons.inventory_2, const CurrencyEntryPage()),
     Page("Statistics", Icons.analytics, const StatisticsNavigationPage()),
   ];
 

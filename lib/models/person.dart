@@ -17,22 +17,22 @@ double _parseDouble(dynamic value) {
   return 0.0;
 }
 
-class Supplier extends GenericFirebaseObject<Supplier> {
+class Person extends GenericFirebaseObject<Person> {
   final String name;
   final String phone;
   final String email;
   final String address;
+  final double balance;
   final DateTime createdAt;
   final Timestamp? updatedAt;
-  final double balance;
-  final List<DocumentReference>? transactionHistory;
   final String notes;
+  final List<DocumentReference>? transactionHistory;
 
-  static const collectionName = "Suppliers";
+  static const collectionName = "Person";
   @override
   String get collName => collectionName;
 
-  Supplier({
+  Person({
     super.id,
     required this.name,
     required this.phone,
@@ -47,9 +47,9 @@ class Supplier extends GenericFirebaseObject<Supplier> {
   });
 
   @override
-  factory Supplier.fromFirestore(DocumentSnapshot doc) {
+  factory Person.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return Supplier(
+    return Person(
       id: doc.id,
       name: data['name'] ?? '',
       phone: data['phone'] ?? '',
@@ -61,7 +61,7 @@ class Supplier extends GenericFirebaseObject<Supplier> {
           (data['transactionHistory'] as List<dynamic>?)
               ?.cast<DocumentReference>(),
       snapshot: doc,
-      updatedAt: (data['updatedAt'] as Timestamp),
+      updatedAt: (data['updatedAt'] as Timestamp?),
       notes: data['notes'] ?? '',
     );
   }

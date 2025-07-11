@@ -1,10 +1,10 @@
-import 'package:aromex/pages/home/pages/add_customer.dart';
 import 'package:aromex/pages/home/main.dart';
+import 'package:aromex/pages/home/pages/add_customer.dart';
 import 'package:aromex/pages/home/pages/add_expense.dart';
 import 'package:aromex/pages/home/pages/add_middleman.dart';
-import 'package:aromex/pages/home/widgets/action_card.dart';
-import 'package:aromex/pages/purchase/widgets/product_detail_dialog.dart';
 import 'package:aromex/pages/home/pages/add_supplier.dart';
+import 'package:aromex/pages/home/pages/widgets/action_card.dart';
+import 'package:aromex/pages/purchase/widgets/product_detail_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -56,9 +56,7 @@ class _ActionSectionState extends State<ActionSection> {
                   },
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: ActionCard(
                   icon: SvgPicture.asset(
@@ -88,9 +86,7 @@ class _ActionSectionState extends State<ActionSection> {
                   },
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: ActionCard(
                   icon: SvgPicture.asset(
@@ -120,73 +116,69 @@ class _ActionSectionState extends State<ActionSection> {
                   },
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
-                child:
-                    _isCreatingProduct
-                        ? Align(
-                          alignment: Alignment.center,
-                          child: CircularProgressIndicator(),
-                        )
-                        : ActionCard(
-                          icon: SvgPicture.asset(
-                            'assets/icons/product.svg',
-                            width: 40,
-                            height: 40,
-                          ),
-                          title: 'Add Product',
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return Align(
-                                  alignment: Alignment.center,
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal:
-                                          MediaQuery.of(context).size.width *
-                                          0.125,
-                                      vertical:
-                                          MediaQuery.of(context).size.height *
-                                          0.125,
-                                    ),
-                                    child: ProductDetailDialog(
-                                      onProductAdded: (phone) async {
-                                        setState(() {
-                                          _isCreatingProduct = true;
-                                        });
-                                        Navigator.pop(context);
-                                        await phone.create();
-                                        setState(() {
-                                          _isCreatingProduct = false;
-                                        });
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Product created successfully',
-                                            ),
-                                            duration: const Duration(
-                                              seconds: 2,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
+                child: _isCreatingProduct
+                    ? Align(
+                        alignment: Alignment.center,
+                        child: CircularProgressIndicator(),
+                      )
+                    : ActionCard(
+                        icon: SvgPicture.asset(
+                          'assets/icons/product.svg',
+                          width: 40,
+                          height: 40,
                         ),
+                        title: 'Add Product',
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return Align(
+                                alignment: Alignment.center,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal:
+                                        MediaQuery.of(context).size.width *
+                                            0.125,
+                                    vertical:
+                                        MediaQuery.of(context).size.height *
+                                            0.125,
+                                  ),
+                                  child: ProductDetailDialog(
+                                    onProductAdded: (phone) async {
+                                      setState(() {
+                                        _isCreatingProduct = true;
+                                      });
+                                      Navigator.pop(context);
+                                      await phone.create();
+                                      setState(() {
+                                        _isCreatingProduct = false;
+                                      });
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Product created successfully',
+                                          ),
+                                          duration: const Duration(
+                                            seconds: 2,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
               ),
             ],
           ),
         ),
-
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
@@ -204,9 +196,7 @@ class _ActionSectionState extends State<ActionSection> {
                   },
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: ActionCard(
                   icon: SvgPicture.asset(
@@ -220,9 +210,7 @@ class _ActionSectionState extends State<ActionSection> {
                   },
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: ActionCard(
                   icon: SvgPicture.asset(
@@ -234,9 +222,7 @@ class _ActionSectionState extends State<ActionSection> {
                   onTap: () {},
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: ActionCard(
                   icon: SvgPicture.asset(
@@ -248,6 +234,21 @@ class _ActionSectionState extends State<ActionSection> {
                   onTap: () {},
                 ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ActionCard(
+                  icon: SvgPicture.asset(
+                    'assets/icons/sale_record.svg',
+                    width: 40,
+                    height: 40,
+                  ),
+                  title: 'Add Journal',
+                  onTap: () {
+                    widget.onPageChange(Pages.JournalEntryPage);
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
             ],
           ),
         ),

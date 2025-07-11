@@ -17,14 +17,20 @@ Future<void> createSale(aromex_order.Order order, Sale sale) async {
   await addSaleToCustomer(order.scref!, saleRef);
   await updateSaleStats(sale.total, order.scref!);
   await addSaleToMiddleman(sale.middlemanRef, saleRef);
+  await addCreditToMiddleman(sale.middlemanRef, sale.mCredit);
+
+  // Add middleman credit to total due
+  if (sale.middlemanRef != null ) {
+    await addMiddlemanCreditToTotalDue(sale.mCredit, saleRef);
+  }
 }
 
 Future<void> addBalance(
-  BalanceType paymentSource,
-  double amount,
-  double credit,
-  DocumentReference saleRef,
-) async {
+    BalanceType paymentSource,
+    double amount,
+    double credit,
+    DocumentReference saleRef,
+    ) async {
   amount -= credit;
 
   await Future.wait([
@@ -35,7 +41,7 @@ Future<void> addBalance(
         saleRef: saleRef,
       );
     }),
-    if (credit > 0)
+    if (true)
       Balance.fromType(BalanceType.totalOwe).then((balance) async {
         await balance.addAmount(
           credit,
@@ -47,9 +53,9 @@ Future<void> addBalance(
 }
 
 Future<void> addCreditToCustomer(
-  DocumentReference customer,
-  double credit,
-) async {
+    DocumentReference customer,
+    double credit,
+    ) async {
   final docRef = FirebaseFirestore.instance
       .collection('Customers')
       .doc(customer.id);
@@ -62,30 +68,60 @@ Future<void> addCreditToCustomer(
 }
 
 Future<void> addSaleToCustomer(
-  DocumentReference customer,
-  DocumentReference saleRef,
-) async {
+    DocumentReference customer,
+    DocumentReference saleRef,
+    ) async {
   await FirebaseFirestore.instance
       .collection('Customers')
       .doc(customer.id)
       .update({
-        'transactionHistory': FieldValue.arrayUnion([saleRef]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+    'transactionHistory': FieldValue.arrayUnion([saleRef]),
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
 }
 
 Future<void> addSaleToMiddleman(
-  DocumentReference? middleman,
-  DocumentReference saleRef,
-) async {
+    DocumentReference? middleman,
+    DocumentReference saleRef,
+    ) async {
   if (middleman == null) return;
   await FirebaseFirestore.instance
       .collection('Middlemen')
       .doc(middleman.id)
       .update({
-        'transactionHistory': FieldValue.arrayUnion([saleRef]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+    'transactionHistory': FieldValue.arrayUnion([saleRef]),
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
+}
+
+Future<void> addCreditToMiddleman(
+    DocumentReference? middleman,
+    double credit,
+    ) async {
+  if (middleman == null) return;
+
+  final docRef = FirebaseFirestore.instance
+      .collection('Middlemen')
+      .doc(middleman.id);
+
+  final snapshot = await docRef.get();
+  final data = snapshot.data()!;
+  final currentBalance = (data['balance'] ?? 0.0) as num;
+
+  await docRef.update({'balance': currentBalance + credit});
+}
+
+Future<void> addMiddlemanCreditToTotalDue(
+    double credit,
+    DocumentReference saleRef,
+    ) async {
+  await Balance.fromType(BalanceType.totalDue).then((balance) async {
+    await balance.addAmount(
+      credit,
+      transactionType: TransactionType.sale,
+      saleRef: saleRef,
+    );
+  });
 }
 
 Future<void> updateSaleStats(double amount, DocumentReference customer) async {

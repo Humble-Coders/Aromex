@@ -190,7 +190,7 @@ class TotalOweDueCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total owe/due',
+                        'Total due/owe',
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: textTheme.titleLarge?.copyWith(
@@ -221,7 +221,7 @@ class TotalOweDueCard extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Owe',
+                                        'Due',
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         style: textTheme.bodyMedium?.copyWith(
@@ -231,13 +231,16 @@ class TotalOweDueCard extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        formatCurrency(oweAmount, showTrail: true),
+                                        formatCurrency(
+                                          oweAmount,
+                                          showTrail: true,
+                                        ),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         style: textTheme.headlineMedium
                                             ?.copyWith(
                                               fontFamily: 'Nunito',
-                                              color: Colors.red,
+                                              color: Colors.green,
                                               fontVariations: [
                                                 FontVariation('wght', 700),
                                               ],
@@ -251,7 +254,7 @@ class TotalOweDueCard extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Due',
+                                        'Owe',
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         style: textTheme.bodyMedium?.copyWith(
@@ -261,13 +264,16 @@ class TotalOweDueCard extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        formatCurrency(dueAmount, showTrail: true),
+                                        formatCurrency(
+                                          dueAmount,
+                                          showTrail: true,
+                                        ),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         style: textTheme.headlineMedium
                                             ?.copyWith(
                                               fontFamily: 'Nunito',
-                                              color: const Color(0xFF166534),
+                                              color: Colors.red,
                                               fontVariations: [
                                                 FontVariation('wght', 700),
                                               ],

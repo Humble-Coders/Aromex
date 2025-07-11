@@ -6,7 +6,6 @@ import 'package:aromex/models/transaction.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<void> createPurchase(aromex_order.Order order, Purchase purchase) async {
-  // Create phones
   await createPhoneRef(order.phoneList, order.phones!);
   final purchaseRef = await purchase.create();
 
@@ -27,11 +26,11 @@ Future<void> createPurchase(aromex_order.Order order, Purchase purchase) async {
 }
 
 Future<void> deductBalance(
-  BalanceType paymentSource,
-  double amount,
-  double credit,
-  DocumentReference purchaseRef,
-) async {
+    BalanceType paymentSource,
+    double amount,
+    double credit,
+    DocumentReference purchaseRef,
+    ) async {
   amount -= credit;
 
   await Future.wait([
@@ -42,7 +41,7 @@ Future<void> deductBalance(
         purchaseRef: purchaseRef,
       );
     }),
-    if (credit > 0)
+    if (true)
       Balance.fromType(BalanceType.totalDue).then((balance) async {
         await balance.addAmount(
           credit,
@@ -66,9 +65,9 @@ Future<void> addCreditToSupplier(DocumentReference scref, double credit) async {
 }
 
 Future<void> addPurchaseToSupplier(
-  DocumentReference scref,
-  DocumentReference purchaseRef,
-) async {
+    DocumentReference scref,
+    DocumentReference purchaseRef,
+    ) async {
   await FirebaseFirestore.instance.collection('Suppliers').doc(scref.id).update(
     {
       'transactionHistory': FieldValue.arrayUnion([purchaseRef]),
@@ -78,9 +77,9 @@ Future<void> addPurchaseToSupplier(
 }
 
 Future<void> createPhoneRef(
-  List<Phone> phones,
-  List<DocumentReference> phoneRefs,
-) async {
+    List<Phone> phones,
+    List<DocumentReference> phoneRefs,
+    ) async {
   for (final phone in phones) {
     DocumentReference ref = await phone.create();
     phoneRefs.add(ref);

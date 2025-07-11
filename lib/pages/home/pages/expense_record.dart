@@ -99,39 +99,37 @@ class _ExpenseRecordState extends State<ExpenseRecord> {
   }
 
   void filterTransactions({bool takeBackToFirstPage = true}) {
-    List<AT.Transaction> baseList =
-        searchQuery.isEmpty
-            ? transactions
-            : transactions.where((transaction) {
-              final category = (transaction.category ?? '').toLowerCase();
-              final notes = (transaction.note ?? '').toLowerCase();
-              final amount = transaction.amount.toString().toLowerCase();
+    List<AT.Transaction> baseList = searchQuery.isEmpty
+        ? transactions
+        : transactions.where((transaction) {
+            final category = (transaction.category ?? '').toLowerCase();
+            final notes = (transaction.note ?? '').toLowerCase();
+            final amount = transaction.amount.toString().toLowerCase();
 
-              return category.contains(searchQuery) ||
-                  notes.contains(searchQuery) ||
-                  amount.contains(searchQuery);
-            }).toList();
+            return category.contains(searchQuery) ||
+                notes.contains(searchQuery) ||
+                amount.contains(searchQuery);
+          }).toList();
 
     // Apply date range filter if active
     if (isDateRangeActive && (startDate != null || endDate != null)) {
-      baseList =
-          baseList.where((transaction) {
-            if (startDate != null &&
-                transaction.time.toDate().isBefore(startDate!)) {
-              return false;
-            }
-            if (endDate != null) {
-              // Include all transactions from the end date
-              final DateTime endDatePlusOne = endDate!.add(
-                const Duration(days: 1),
-              );
-              if (transaction.time.toDate().isAfter(endDatePlusOne) ||
-                  transaction.time.toDate().isAtSameMomentAs(endDatePlusOne)) {
-                return false;
-              }
-            }
-            return true;
-          }).toList();
+      baseList = baseList.where((transaction) {
+        if (startDate != null &&
+            transaction.time.toDate().isBefore(startDate!)) {
+          return false;
+        }
+        if (endDate != null) {
+          // Include all transactions from the end date
+          final DateTime endDatePlusOne = endDate!.add(
+            const Duration(days: 1),
+          );
+          if (transaction.time.toDate().isAfter(endDatePlusOne) ||
+              transaction.time.toDate().isAtSameMomentAs(endDatePlusOne)) {
+            return false;
+          }
+        }
+        return true;
+      }).toList();
     }
 
     setState(() {
@@ -294,8 +292,8 @@ class _ExpenseRecordState extends State<ExpenseRecord> {
                   Text(
                     'Back to home',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                    ),
+                          color: colorScheme.onSurface,
+                        ),
                   ),
                 ],
               ),
@@ -313,9 +311,9 @@ class _ExpenseRecordState extends State<ExpenseRecord> {
                       style: Theme.of(
                         context,
                       ).textTheme.headlineSmall?.copyWith(
-                        color: colorScheme.onSecondary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: colorScheme.onSecondary,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -340,14 +338,12 @@ class _ExpenseRecordState extends State<ExpenseRecord> {
                                     label: Text(
                                       _dateRangeText,
                                       style: TextStyle(
-                                        color:
-                                            isDateRangeActive
-                                                ? Theme.of(context).primaryColor
-                                                : Colors.black54,
-                                        fontWeight:
-                                            isDateRangeActive
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
+                                        color: isDateRangeActive
+                                            ? Theme.of(context).primaryColor
+                                            : Colors.black54,
+                                        fontWeight: isDateRangeActive
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -370,85 +366,84 @@ class _ExpenseRecordState extends State<ExpenseRecord> {
                     isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : Column(
-                          children: [
-                            GenericCustomTable<AT.Transaction>(
-                              entries: currentPageTransactions,
-                              headers: const [
-                                "Date",
-                                "Amount",
-                                "Category",
-                                "Notes",
-                              ],
-                              onTap: (_) {},
-                              valueGetters: [
-                                (transaction) => DateFormat(
-                                  'MM/dd/yyyy',
-                                ).format(transaction.time.toDate()),
-                                (transaction) =>
-                                    formatCurrency(transaction.amount),
-                                (transaction) => transaction.category ?? 'N/A',
-                                (transaction) => transaction.note ?? 'N/A',
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            if (pages.isNotEmpty)
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  ...List.generate(pages.length, (index) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4.0,
-                                      ),
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              index == currentPageIndex
-                                                  ? Theme.of(
-                                                    context,
-                                                  ).primaryColor
-                                                  : Colors.grey[300],
-                                          foregroundColor:
-                                              index == currentPageIndex
-                                                  ? Colors.white
-                                                  : Colors.black,
+                            children: [
+                              GenericCustomTable<AT.Transaction>(
+                                entries: currentPageTransactions,
+                                headers: const [
+                                  "Date",
+                                  "Amount",
+                                  "Category",
+                                  "Notes",
+                                ],
+                                onTap: (_) {},
+                                valueGetters: [
+                                  (transaction) => DateFormat(
+                                        'MM/dd/yyyy',
+                                      ).format(transaction.time.toDate()),
+                                  (transaction) =>
+                                      formatCurrency(transaction.amount),
+                                  (transaction) =>
+                                      transaction.category ?? 'N/A',
+                                  (transaction) => transaction.note ?? 'N/A',
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              if (pages.isNotEmpty)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    ...List.generate(pages.length, (index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4.0,
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            currentPageIndex = index;
-                                          });
-                                        },
-                                        child: Text("${index + 1}"),
-                                      ),
-                                    );
-                                  }),
-                                  if (hasMore)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4.0,
-                                      ),
-                                      child: TextButton(
-                                        onPressed:
-                                            () => loadTransactions(
-                                              loadMore: true,
-                                            ),
-                                        child:
-                                            isLoadingMore
-                                                ? const SizedBox(
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                index == currentPageIndex
+                                                    ? Theme.of(
+                                                        context,
+                                                      ).primaryColor
+                                                    : Colors.grey[300],
+                                            foregroundColor:
+                                                index == currentPageIndex
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              currentPageIndex = index;
+                                            });
+                                          },
+                                          child: Text("${index + 1}"),
+                                        ),
+                                      );
+                                    }),
+                                    if (hasMore)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4.0,
+                                        ),
+                                        child: TextButton(
+                                          onPressed: () => loadTransactions(
+                                            loadMore: true,
+                                          ),
+                                          child: isLoadingMore
+                                              ? const SizedBox(
                                                   height: 16,
                                                   width: 16,
                                                   child:
                                                       CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                      ),
+                                                    strokeWidth: 2,
+                                                  ),
                                                 )
-                                                : const Text("Load Next Page"),
+                                              : const Text("Load Next Page"),
+                                        ),
                                       ),
-                                    ),
-                                ],
-                              ),
-                          ],
-                        ),
+                                  ],
+                                ),
+                            ],
+                          ),
                   ],
                 ),
               ),

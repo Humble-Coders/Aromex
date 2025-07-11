@@ -2,9 +2,9 @@ import 'package:aromex/models/balance_generic.dart';
 import 'package:aromex/models/purchase.dart';
 import 'package:aromex/models/supplier.dart';
 import 'package:aromex/pages/home/pages/purchase_detail_page.dart';
-import 'package:aromex/pages/home/widgets/balance_card.dart';
-import 'package:aromex/widgets/profile_card.dart';
+import 'package:aromex/pages/home/pages/widgets/balance_card.dart';
 import 'package:aromex/widgets/generic_custom_table.dart';
+import 'package:aromex/widgets/profile_card.dart';
 import 'package:aromex/widgets/update_credit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -50,11 +50,10 @@ class _SupplierProfileState extends State<SupplierProfile> {
   // Method to refresh supplier data from Firestore
   Future<void> refreshSupplierData() async {
     try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection(Supplier.collectionName)
-              .doc(currentSupplier.id)
-              .get();
+      final doc = await FirebaseFirestore.instance
+          .collection(Supplier.collectionName)
+          .doc(currentSupplier.id)
+          .get();
 
       if (doc.exists) {
         setState(() {
@@ -119,8 +118,7 @@ class _SupplierProfileState extends State<SupplierProfile> {
                                 padding: EdgeInsets.symmetric(
                                   horizontal:
                                       MediaQuery.of(context).size.width * 0.125,
-                                  vertical:
-                                      MediaQuery.of(context).size.height *
+                                  vertical: MediaQuery.of(context).size.height *
                                       0.125,
                                 ),
                                 child: UpdateCredit(
@@ -144,9 +142,8 @@ class _SupplierProfileState extends State<SupplierProfile> {
                           },
                         );
                       },
-                      amount:
-                          currentSupplier
-                              .balance, // Use currentSupplier instead
+                      amount: currentSupplier
+                          .balance, // Use currentSupplier instead
                       updatedAt: updatedAt,
                       isLoading: false,
                     ),
@@ -157,44 +154,44 @@ class _SupplierProfileState extends State<SupplierProfile> {
               const SizedBox(height: 16),
               purchases.isNotEmpty
                   ? GenericCustomTable<Purchase>(
-                    onTap: (p) {
-                      setState(() {
-                        purchaseDetailPage = PurchaseDetailPage(
-                          purchase: p,
-                          onBack: () {
-                            setState(() {
-                              purchaseDetailPage = null;
-                            });
-                          },
-                        );
-                      });
-                    },
-                    entries: purchases,
-                    headers: [
-                      "Date",
-                      "Order No.",
-                      "Amount",
-                      "Payment Source",
-                      "Credit",
-                    ],
-                    valueGetters: [
-                      (p) => p.date.toString(),
-                      (p) => p.orderNumber,
-                      (p) => p.amount.toString(),
-                      (p) => balanceTypeTitles[p.paymentSource]!,
-                      (p) => p.credit.toString(),
-                    ],
-                  )
+                      onTap: (p) {
+                        setState(() {
+                          purchaseDetailPage = PurchaseDetailPage(
+                            purchase: p,
+                            onBack: () {
+                              setState(() {
+                                purchaseDetailPage = null;
+                              });
+                            },
+                          );
+                        });
+                      },
+                      entries: purchases,
+                      headers: [
+                        "Date",
+                        "Order No.",
+                        "Amount",
+                        "Payment Source",
+                        "Credit",
+                      ],
+                      valueGetters: [
+                        (p) => p.date.toString(),
+                        (p) => p.orderNumber,
+                        (p) => p.amount.toString(),
+                        (p) => balanceTypeTitles[p.paymentSource]!,
+                        (p) => p.credit.toString(),
+                      ],
+                    )
                   : isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Center(
-                    child: Text(
-                      'No Purchases Found',
-                      style: textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSecondary,
-                      ),
-                    ),
-                  ),
+                      ? const Center(child: CircularProgressIndicator())
+                      : Center(
+                          child: Text(
+                            'No Purchases Found',
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSecondary,
+                            ),
+                          ),
+                        ),
             ],
           ),
         ),

@@ -2,7 +2,7 @@ import 'package:aromex/models/balance_generic.dart';
 import 'package:aromex/models/customer.dart';
 import 'package:aromex/models/sale.dart';
 import 'package:aromex/pages/home/pages/sale_detail_page.dart';
-import 'package:aromex/pages/home/widgets/balance_card.dart';
+import 'package:aromex/pages/home/pages/widgets/balance_card.dart';
 import 'package:aromex/widgets/generic_custom_table.dart';
 import 'package:aromex/widgets/profile_card.dart';
 import 'package:aromex/widgets/update_credit.dart';
@@ -23,13 +23,13 @@ class CustomerProfile extends StatefulWidget {
 class _CustomerProfileState extends State<CustomerProfile> {
   List<Sale> sales = [];
   bool isLoading = true;
-  late Customer currentCustomer; 
+  late Customer currentCustomer;
   SaleDetailPage? saleDetailPage;
 
   @override
   void initState() {
     super.initState();
-    currentCustomer = widget.customer!; 
+    currentCustomer = widget.customer!;
     loadSales();
   }
 
@@ -87,11 +87,10 @@ class _CustomerProfileState extends State<CustomerProfile> {
   // Method to refresh customer data from Firestore
   Future<void> refreshCustomerData() async {
     try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection(Customer.collectionName)
-              .doc(currentCustomer.id)
-              .get();
+      final doc = await FirebaseFirestore.instance
+          .collection(Customer.collectionName)
+          .doc(currentCustomer.id)
+          .get();
 
       if (doc.exists) {
         setState(() {
@@ -160,8 +159,7 @@ class _CustomerProfileState extends State<CustomerProfile> {
                                 padding: EdgeInsets.symmetric(
                                   horizontal:
                                       MediaQuery.of(context).size.width * 0.125,
-                                  vertical:
-                                      MediaQuery.of(context).size.height *
+                                  vertical: MediaQuery.of(context).size.height *
                                       0.125,
                                 ),
                                 child: UpdateCredit(
@@ -196,46 +194,46 @@ class _CustomerProfileState extends State<CustomerProfile> {
               const SizedBox(height: 16),
               sales.isNotEmpty
                   ? GenericCustomTable<Sale>(
-                    onTap: (p) {
-                      setState(() {
-                        saleDetailPage = SaleDetailPage(
-                          sale: p,
-                          onBack: () {
-                            setState(() {
-                              saleDetailPage = null;
-                            });
-                          },
-                        );
-                      });
-                    },
-                    entries: sales,
-                    headers: [
-                      "Date",
-                      "Order No.",
-                      "Amount",
-                      "Payment Source",
-                      "Credit",
-                    ],
-                    valueGetters: [
-                      (p) => DateFormat.yMd().format(p.date),
-                      (p) => p.orderNumber,
-                      (p) =>
-                          NumberFormat.currency(symbol: '\$').format(p.amount),
-                      (p) => balanceTypeTitles[p.paymentSource]!,
-                      (p) =>
-                          NumberFormat.currency(symbol: '\$').format(p.credit),
-                    ],
-                  )
+                      onTap: (p) {
+                        setState(() {
+                          saleDetailPage = SaleDetailPage(
+                            sale: p,
+                            onBack: () {
+                              setState(() {
+                                saleDetailPage = null;
+                              });
+                            },
+                          );
+                        });
+                      },
+                      entries: sales,
+                      headers: [
+                        "Date",
+                        "Order No.",
+                        "Amount",
+                        "Payment Source",
+                        "Credit",
+                      ],
+                      valueGetters: [
+                        (p) => DateFormat.yMd().format(p.date),
+                        (p) => p.orderNumber,
+                        (p) => NumberFormat.currency(symbol: '\$')
+                            .format(p.amount),
+                        (p) => balanceTypeTitles[p.paymentSource]!,
+                        (p) => NumberFormat.currency(symbol: '\$')
+                            .format(p.credit),
+                      ],
+                    )
                   : isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Center(
-                    child: Text(
-                      'No Sales Found',
-                      style: textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSecondary,
-                      ),
-                    ),
-                  ),
+                      ? const Center(child: CircularProgressIndicator())
+                      : Center(
+                          child: Text(
+                            'No Sales Found',
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSecondary,
+                            ),
+                          ),
+                        ),
             ],
           ),
         ),
