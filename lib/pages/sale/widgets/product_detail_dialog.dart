@@ -147,67 +147,48 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
     refreshPhoneList();
   }
 
-  // NEW METHOD: Autofill based on IMEI
-  void autofillByIMEI(String imei) {
-    if (imei.trim().isEmpty) return;
-
-    // Find the phone with this IMEI
-    Phone? phoneWithIMEI = widget.allPhones.firstWhere(
+  void prefillFromIMEI(String imei) {
+    final phoneWithIMEI = widget.allPhones.firstWhere(
       (phone) => phone.imei == imei,
-      orElse: () => null as Phone,
+      orElse: () => throw Exception('Phone with IMEI $imei not found'),
     );
 
-    if (phoneWithIMEI != null) {
-      setState(() {
-        // Clear any existing errors
-        imeiError = null;
+    setState(() {
+      // Set brand
+      selectedBrand = PhoneBrand.fromFirestore(phoneWithIMEI.brand!);
+      brandController.text = selectedBrand!.name;
 
-        // Autofill brand
-        selectedBrand = PhoneBrand.fromFirestore(phoneWithIMEI.brand!);
-        brandController.text = selectedBrand!.name;
+      // Set model
+      selectedModel = PhoneModel.fromFirestore(phoneWithIMEI.model!);
+      modelController.text = selectedModel!.name;
 
-        // Autofill model
-        selectedModel = PhoneModel.fromFirestore(phoneWithIMEI.model!);
-        modelController.text = selectedModel!.name;
+      // Set storage location
+      selectedLocation = StorageLocation.fromFirestore(phoneWithIMEI.storageLocation!);
+      locationController.text = selectedLocation!.name;
 
-        // Autofill carrier
-        selectedCarrier = phoneWithIMEI.carrier;
-        carrierController.text = phoneWithIMEI.carrier;
+      // Set carrier
+      selectedCarrier = phoneWithIMEI.carrier;
+      carrierController.text = phoneWithIMEI.carrier;
 
-        // Autofill storage location
-        selectedLocation = StorageLocation.fromFirestore(
-          phoneWithIMEI.storageLocation!,
-        );
-        locationController.text = selectedLocation!.name;
+      // Set capacity
+      selectedCapacity = phoneWithIMEI.capacity;
+      capacityController.text = phoneWithIMEI.capacity.toString();
 
-        // Autofill capacity
-        selectedCapacity = phoneWithIMEI.capacity;
-        capacityController.text = "${phoneWithIMEI.capacity.toString()} GB";
+      // Set color
+      selectedColor = phoneWithIMEI.color;
+      colorController.text = phoneWithIMEI.color;
 
-        // Autofill color
-        selectedColor = phoneWithIMEI.color;
-        colorController.text = phoneWithIMEI.color;
+      // Set status
+      selectedStatus = phoneWithIMEI.status;
+      statusController.text = phoneWithIMEI.status ? "Active" : "Inactive";
 
-        // Autofill status
-        selectedStatus = phoneWithIMEI.status;
-        statusController.text = phoneWithIMEI.status ? "Active" : "Inactive";
+      // Set IMEI
+      selectedIMEI = imei;
+      imeiController.text = imei;
+    });
 
-        // Set the selected phone and cost price
-        selectedPhone = phoneWithIMEI;
-        _costPriceController.text = phoneWithIMEI.price.toString();
-
-        // Clear selling price for user input
-        _sellingPriceController.clear();
-      });
-
-      // Refresh the phone list to update available options
-      refreshPhoneList();
-    } else {
-      // IMEI not found, show error
-      setState(() {
-        imeiError = "IMEI not found in inventory";
-      });
-    }
+    // Refresh the phone list to update all dropdowns
+    refreshPhoneList();
   }
 
   void refreshPhoneList() {
@@ -377,7 +358,9 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                     onChanged: (imei) {
                       selectedIMEI = imei;
                       if (imei != null) {
-                        autofillByIMEI(imei); // Call autofill method
+                        prefillFromIMEI(imei);
+                      } else {
+                        refreshPhoneList();
                       }
                     },
                     getLabel: (imei) => imei,
@@ -388,12 +371,6 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                         imeiError = null;
                       });
                       refreshPhoneList();
-                    },
-                    onTextChanged: (text) {
-                      // This will be called when user types in the field
-                      if (text.isNotEmpty) {
-                        autofillByIMEI(text);
-                      }
                     },
                   ),
                 ),
